@@ -97,7 +97,8 @@ public class PictureInPictureWindow {
         double windowHeight = minecraftWindow.getHeight();
 
         handle = glfwCreateWindow((int) windowWidth, (int) windowHeight,
-            I18n.translate("text.picture-in-picture.title"), NULL,
+            I18n.translate("text.picture-in-picture.title"),
+            NULL,
             minecraftWindow.getHandle());
 
         if (handle == NULL) {

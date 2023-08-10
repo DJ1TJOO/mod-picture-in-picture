@@ -19,4 +19,7 @@ public class ModConfig implements ConfigData {
     public boolean openDecorated = true;
     @ConfigEntry.Gui.Tooltip
     public boolean openFloated = false;
+
+//    @WindowConfig
+//    public List<String> windows = new ArrayList<>();
 }

@@ -45,6 +45,8 @@ public class PictureInPictureModClient implements ClientModInitializer {
 
         PIP_LOGGER.info("Registering config");
         AutoConfig.register(ModConfig.class, JanksonConfigSerializer::new);
+//        AutoConfig.getGuiRegistry(ModConfig.class)
+//            .registerAnnotationProvider(new WindowsGuiProvider(), WindowConfig.class);
 
         PIP_LOGGER.info("Registering screen events");
         ScreenEvents.AFTER_INIT.register(ScreenHandler::afterInitScreen);
@@ -80,5 +82,9 @@ public class PictureInPictureModClient implements ClientModInitializer {
     public void renderWindows() {
         pictureInPictureWindows.removeIf(x -> !x.isOpen());
         pictureInPictureWindows.forEach(PictureInPictureWindow::render);
+    }
+
+    public List<PictureInPictureWindow> getPictureInPictureWindows() {
+        return pictureInPictureWindows;
     }
 }
