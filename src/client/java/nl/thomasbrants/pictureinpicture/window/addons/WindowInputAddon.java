@@ -17,4 +17,8 @@ public interface WindowInputAddon {
     void onDoubleClick(Vector2d mousePosition, int button, int mods);
 
     void onMouseMove(Vector2d mousePosition);
+
+    void onKeyAction(int key, int scancode, int action, int mods);
+
+    void onScroll(double xOffset, double yOffset);
 }

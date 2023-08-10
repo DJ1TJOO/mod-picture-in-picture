@@ -34,7 +34,6 @@ public class PictureInPictureModClient implements ClientModInitializer {
 //        TODO: default settings when creating a new window
         PictureInPictureWindow pictureInPictureWindow =
             new PictureInPictureWindow(false, true, false);
-        pictureInPictureWindow.create();
 
 //        TODO: make window overview
         pictureInPictureWindow.registerAddon(DraggableAddon.class);
@@ -42,6 +41,9 @@ public class PictureInPictureModClient implements ClientModInitializer {
         pictureInPictureWindow.registerAddon(DecoratedToggleAddon.class);
         pictureInPictureWindow.registerAddon(ForceRenderAspectRatioAddon.class);
         pictureInPictureWindow.registerAddon(ForceWindowAspectRatioAddon.class);
+        pictureInPictureWindow.registerAddon(ZoomAddon.class);
+        
+        pictureInPictureWindow.create();
 
         pictureInPictureWindows.add(pictureInPictureWindow);
     }

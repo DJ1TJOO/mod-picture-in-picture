@@ -36,4 +36,14 @@ public class FloatableToggleAddon extends WindowAddon implements WindowInputAddo
     public void onMouseMove(Vector2d mousePosition) {
 
     }
+
+    @Override
+    public void onKeyAction(int key, int scancode, int action, int mods) {
+
+    }
+
+    @Override
+    public void onScroll(double xOffset, double yOffset) {
+
+    }
 }

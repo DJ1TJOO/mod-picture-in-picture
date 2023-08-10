@@ -23,6 +23,7 @@ import org.joml.Vector2d;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.GLFWImage;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -33,6 +34,8 @@ import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import static nl.thomasbrants.pictureinpicture.PictureInPictureMod.PIP_LOGGER;
@@ -41,11 +44,15 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class PictureInPictureWindow {
+    private static final List<String> RENDER_ORDER =
+        new ArrayList<>(Arrays.asList("draggable", "zoom", "force-render-aspect-ratio"));
+
     private final List<WindowAddon> addons;
     private final boolean startFocused, startDecorated, startFloated;
 
     private long handle;
     private int frameBufferWidth, frameBufferHeight;
+    private boolean initialized = false;
 
     private long lastMouseRelease;
     private int lastMouseMods, lastMouseButton;
@@ -102,7 +109,8 @@ public class PictureInPictureWindow {
 
         // Set callbacks
         InputUtil.setMouseCallbacks(handle, this::onMouseMove, this::handleMouseAction,
-            null, null);
+            this::onScroll, null);
+        InputUtil.setKeyboardCallbacks(handle, this::onKeyAction, null);
         glfwSetFramebufferSizeCallback(handle, this::setWindowSize);
         glfwSetWindowFocusCallback(handle, this::handleWindowFocus);
         glfwSetWindowPosCallback(handle, this::onWindowMove);
@@ -126,6 +134,7 @@ public class PictureInPictureWindow {
         // Update size
         setWindowSize(handle, (int) windowWidth, (int) windowHeight);
 
+        initialized = true;
         for (WindowAddon addon : addons.stream().filter(x -> x instanceof WindowAttributeAddon)
             .toList()) {
             ((WindowAttributeAddon) addon).onWindowInitialized(windowWidth, windowHeight);
@@ -172,10 +181,14 @@ public class PictureInPictureWindow {
             MinecraftClient.IS_SYSTEM_MAC);
         GlStateManager._viewport(0, 0, frameBufferWidth, frameBufferHeight);
 
+        GL11.glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+
         // TODO: test addons to render something
 
         List<WindowAddon> renderAddons =
             addons.stream().filter(addon -> addon instanceof WindowRenderAddon)
+                .sorted(Comparator.comparingInt(a -> RENDER_ORDER.indexOf(a.getId())))
                 .toList();
 
         // Render addons
@@ -186,6 +199,8 @@ public class PictureInPictureWindow {
         if (renderAddons.stream().noneMatch(addon -> ((WindowRenderAddon) addon).override())) {
             renderMinecraftFBO();
         }
+
+        glPopMatrix();
 
         glfwSwapBuffers(handle);
         glfwMakeContextCurrent(MinecraftClient.getInstance().getWindow().getHandle());
@@ -258,6 +273,20 @@ public class PictureInPictureWindow {
         for (WindowAddon addon : addons.stream().filter(x -> x instanceof WindowAttributeAddon)
             .toList()) {
             ((WindowAttributeAddon) addon).onWindowBlur();
+        }
+    }
+
+    private void onKeyAction(long window, int key, int scancode, int action, int mods) {
+        for (WindowAddon addon : addons.stream().filter(x -> x instanceof WindowInputAddon)
+            .toList()) {
+            ((WindowInputAddon) addon).onKeyAction(key, scancode, action, mods);
+        }
+    }
+
+    private void onScroll(long window, double xOffset, double yOffset) {
+        for (WindowAddon addon : addons.stream().filter(x -> x instanceof WindowInputAddon)
+            .toList()) {
+            ((WindowInputAddon) addon).onScroll(xOffset, yOffset);
         }
     }
 
@@ -566,7 +595,7 @@ public class PictureInPictureWindow {
                 return true;
             }
 
-            if (addon instanceof WindowAttributeAddon) {
+            if (initialized && addon instanceof WindowAttributeAddon) {
                 Window minecraftWindow = MinecraftClient.getInstance().getWindow();
                 double windowWidth = minecraftWindow.getFramebufferWidth();
                 double windowHeight = minecraftWindow.getFramebufferHeight();

@@ -16,12 +16,12 @@ public class DraggableAddon extends WindowAddon
 
     private boolean dragging = false;
 
-    private final Vector2d dragStart, windowDestination;
+    private final Vector2d draggingStart, windowDestination;
 
     public DraggableAddon(PictureInPictureWindow window) {
         super("draggable", window);
 
-        dragStart = new Vector2d();
+        draggingStart = new Vector2d();
         windowDestination = new Vector2d();
     }
 
@@ -32,7 +32,7 @@ public class DraggableAddon extends WindowAddon
             return;
         }
 
-        dragStart.set(mousePosition);
+        draggingStart.set(mousePosition);
 
         if (window.isMaximized()) {
             Vector2i windowPosition = window.getWindowPosition();
@@ -47,7 +47,7 @@ public class DraggableAddon extends WindowAddon
             window.setWindowPosition((int) newWindowX, (int) newWindowY);
 
             Vector2d newMousePosition = window.getMousePosition();
-            dragStart.set(newMousePosition);
+            draggingStart.set(newMousePosition);
         }
 
         dragging = true;
@@ -64,11 +64,11 @@ public class DraggableAddon extends WindowAddon
             return;
         }
 
-        double deltaX = mousePosition.x - dragStart.x;
-        double deltaY = mousePosition.y - dragStart.y;
+        double deltaX = mousePosition.x - draggingStart.x;
+        double deltaY = mousePosition.y - draggingStart.y;
         windowDestination.add(deltaX, deltaY);
 
-        dragStart.set(mousePosition);
+        draggingStart.set(mousePosition);
     }
 
     @Override
@@ -95,7 +95,7 @@ public class DraggableAddon extends WindowAddon
         window.setWindowPosition(newWindowX, newWindowY);
 
         Vector2d mousePosition = window.getMousePosition();
-        dragStart.set(mousePosition);
+        draggingStart.set(mousePosition);
     }
 
     @Override
@@ -135,6 +135,16 @@ public class DraggableAddon extends WindowAddon
 
     @Override
     public void onWindowInitialized(double width, double height) {
+
+    }
+
+    @Override
+    public void onKeyAction(int key, int scancode, int action, int mods) {
+
+    }
+
+    @Override
+    public void onScroll(double xOffset, double yOffset) {
 
     }
 }
