@@ -4,13 +4,19 @@
 
 package nl.thomasbrants.pictureinpicture;
 
+import me.shedaniel.autoconfig.AutoConfig;
+import me.shedaniel.autoconfig.ConfigHolder;
+import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
+import nl.thomasbrants.pictureinpicture.config.ModConfig;
 import nl.thomasbrants.pictureinpicture.window.PictureInPictureWindow;
 import nl.thomasbrants.pictureinpicture.window.addons.*;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static nl.thomasbrants.pictureinpicture.PictureInPictureMod.PIP_LOGGER;
 
 public class PictureInPictureModClient implements ClientModInitializer {
     private static PictureInPictureModClient instance;
@@ -19,21 +25,35 @@ public class PictureInPictureModClient implements ClientModInitializer {
         return instance;
     }
 
+    private static ModConfig _modConfig;
+
+    public static ModConfig getConfig() {
+        if (_modConfig != null) {
+            return _modConfig;
+        }
+
+        ConfigHolder<ModConfig> configHolder = AutoConfig.getConfigHolder(ModConfig.class);
+        return (_modConfig = configHolder.getConfig());
+    }
+
     private List<PictureInPictureWindow> pictureInPictureWindows;
 
     @Override
     public void onInitializeClient() {
         instance = this;
-
         this.pictureInPictureWindows = new ArrayList<>();
 
+        PIP_LOGGER.info("Registering config");
+        AutoConfig.register(ModConfig.class, JanksonConfigSerializer::new);
+
+        PIP_LOGGER.info("Registering screen events");
         ScreenEvents.AFTER_INIT.register(ScreenHandler::afterInitScreen);
     }
 
     public void createPictureInPictureWindow() {
-//        TODO: default settings when creating a new window
         PictureInPictureWindow pictureInPictureWindow =
-            new PictureInPictureWindow(false, true, false);
+            new PictureInPictureWindow(getConfig().autoFocus, getConfig().openDecorated,
+                getConfig().openFloated);
 
 //        TODO: make window overview
         pictureInPictureWindow.registerAddon(DraggableAddon.class);
@@ -42,7 +62,7 @@ public class PictureInPictureModClient implements ClientModInitializer {
         pictureInPictureWindow.registerAddon(ForceRenderAspectRatioAddon.class);
         pictureInPictureWindow.registerAddon(ForceWindowAspectRatioAddon.class);
         pictureInPictureWindow.registerAddon(ZoomAddon.class);
-        
+
         pictureInPictureWindow.create();
 
         pictureInPictureWindows.add(pictureInPictureWindow);

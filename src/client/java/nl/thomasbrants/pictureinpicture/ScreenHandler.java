@@ -41,6 +41,6 @@ public class ScreenHandler {
                 0, 20, POP_OUT_ICON_TEXTURE, 20, 40,
                 button -> {
                     PictureInPictureModClient.getInstance().createPictureInPictureWindow();
-                }, Text.translatable("picture-in-picture.narrator.button.pop_out")));
+                }, Text.translatable("narrator.picture-in-picture.pop_out")));
     }
 }

@@ -1,4 +1,11 @@
 {
-  "picture-in-picture.narrator.button.pop_out": "Open picture in picture mode",
-  "picture-in-picture.title.picture_in_picture": "Minecraft: Picture in Picture"
+  "narrator.picture-in-picture.pop_out": "Open picture in picture mode",
+  "text.picture-in-picture.title": "Minecraft: Picture in Picture",
+  "text.autoconfig.picture-in-picture.title": "Picture in Picture Settings",
+  "text.autoconfig.picture-in-picture.option.autoFocus": "Auto Focus Windows",
+  "text.autoconfig.picture-in-picture.option.autoFocus.@Tooltip": "Auto focus window when created",
+  "text.autoconfig.picture-in-picture.option.openDecorated": "Open Decorated",
+  "text.autoconfig.picture-in-picture.option.openDecorated.@Tooltip": "Window buttons visible when created",
+  "text.autoconfig.picture-in-picture.option.openFloated": "Open Floated",
+  "text.autoconfig.picture-in-picture.option.openFloated.@Tooltip": "Keep window above all other windows when created"
 }

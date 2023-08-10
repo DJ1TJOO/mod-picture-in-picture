@@ -13,7 +13,6 @@ import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.Window;
 import net.minecraft.resource.InputSupplier;
-import nl.thomasbrants.pictureinpicture.PictureInPictureMod;
 import nl.thomasbrants.pictureinpicture.window.addons.WindowAddon;
 import nl.thomasbrants.pictureinpicture.window.addons.WindowAttributeAddon;
 import nl.thomasbrants.pictureinpicture.window.addons.WindowInputAddon;
@@ -98,7 +97,7 @@ public class PictureInPictureWindow {
         double windowHeight = minecraftWindow.getHeight();
 
         handle = glfwCreateWindow((int) windowWidth, (int) windowHeight,
-            I18n.translate(PictureInPictureMod.MOD_ID + ".title.picture_in_picture"), NULL,
+            I18n.translate("text.picture-in-picture.title"), NULL,
             minecraftWindow.getHandle());
 
         if (handle == NULL) {
@@ -183,8 +182,6 @@ public class PictureInPictureWindow {
 
         GL11.glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
-
-        // TODO: test addons to render something
 
         List<WindowAddon> renderAddons =
             addons.stream().filter(addon -> addon instanceof WindowRenderAddon)

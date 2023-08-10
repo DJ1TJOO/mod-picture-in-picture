@@ -1,41 +1,47 @@
 {
-	"schemaVersion": 1,
-	"id": "picture-in-picture",
-	"version": "${version}",
-	"name": "Picture in Picture",
-	"description": "This is an example description! Tell everyone what your mod is about!",
-	"authors": [
-		"Me!"
-	],
-	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
-	},
-	"license": "CC0-1.0",
-	"icon": "assets/picture-in-picture/icon.png",
-	"environment": "*",
-	"entrypoints": {
-		"main": [
-			"nl.thomasbrants.pictureinpicture.PictureInPictureMod"
-		],
-		"client": [
-			"nl.thomasbrants.pictureinpicture.PictureInPictureModClient"
-		]
-	},
-	"mixins": [
-		"picture-in-picture.mixins.json",
-		{
-			"config": "picture-in-picture.client.mixins.json",
-			"environment": "client"
-		}
-	],
-	"depends": {
-		"fabricloader": ">=0.14.22",
-		"minecraft": "~1.19.3",
-		"java": ">=17",
-		"fabric-api": "*"
-	},
-	"suggests": {
-		"another-mod": "*"
-	}
+  "schemaVersion": 1,
+  "id": "picture-in-picture",
+  "version": "${version}",
+  "name": "Picture in Picture",
+  "description": "A minecraft fabric mod that allows you to create picture in picture windows",
+  "authors": [
+    "DJ1TJOO"
+  ],
+  "contact": {
+    "homepage": "https://github.com/DJ1TJOO",
+    "sources": "https://github.com/DJ1TJOO/mod-picture-in-picture"
+  },
+  "license": "CC-BY-NC-4.0",
+  "icon": "assets/picture-in-picture/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "nl.thomasbrants.pictureinpicture.PictureInPictureMod"
+    ],
+    "client": [
+      "nl.thomasbrants.pictureinpicture.PictureInPictureModClient"
+    ],
+    "modmenu": [
+      "nl.thomasbrants.pictureinpicture.modmenu.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "picture-in-picture.mixins.json",
+    {
+      "config": "picture-in-picture.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.12",
+    "minecraft": "~1.19.3",
+    "java": ">=17",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": ">=4.0.0"
+  },
+  "custom": {
+    "modmenu": {}
+  }
 }
