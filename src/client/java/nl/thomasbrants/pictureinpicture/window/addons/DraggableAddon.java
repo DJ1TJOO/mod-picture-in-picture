@@ -5,12 +5,10 @@
 package nl.thomasbrants.pictureinpicture.window.addons;
 
 import nl.thomasbrants.pictureinpicture.window.PictureInPictureWindow;
-import org.lwjgl.system.MemoryStack;
+import org.joml.Vector2d;
+import org.joml.Vector2i;
 
-import java.nio.DoubleBuffer;
-import java.nio.IntBuffer;
-
-import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
 
 public class DraggableAddon extends WindowAddon
     implements WindowInputAddon, WindowAttributeAddon,
@@ -18,54 +16,59 @@ public class DraggableAddon extends WindowAddon
 
     private boolean dragging = false;
 
-    private double dragStartX, dragStartY;
-    private double windowXDestination, windowYDestination;
+    private final Vector2d dragStart, windowDestination;
 
     public DraggableAddon(PictureInPictureWindow window) {
         super("draggable", window);
+
+        dragStart = new Vector2d();
+        windowDestination = new Vector2d();
     }
 
 
     @Override
-    public void onDragStart(double mouseX, double mouseY, int button, int mods) {
+    public void onDragStart(Vector2d mousePosition, int button, int mods) {
         if (dragging || button != GLFW_MOUSE_BUTTON_LEFT) {
             return;
         }
-        dragging = true;
 
-        dragStartX = mouseX;
-        dragStartY = mouseY;
+        dragStart.set(mousePosition);
+
+        if (window.isMaximized()) {
+            Vector2i windowPosition = window.getWindowPosition();
+            double absoluteMouseX = windowPosition.x + mousePosition.x;
+            double absoluteMouseY = windowPosition.y + mousePosition.y;
+
+            window.minimize();
+
+            Vector2i windowSize = window.getWindowSize();
+            double newWindowX = (absoluteMouseX - windowSize.x / 2.0);
+            double newWindowY = (absoluteMouseY - windowSize.y / 2.0);
+            window.setWindowPosition((int) newWindowX, (int) newWindowY);
+
+            Vector2d newMousePosition = window.getMousePosition();
+            dragStart.set(newMousePosition);
+        }
+
+        dragging = true;
     }
 
     @Override
-    public void onDragEnd(double mouseX, double mouseY, int button, int mods) {
+    public void onDragEnd(Vector2d mousePosition, int button, int mods) {
         dragging = false;
     }
 
     @Override
-    public void onClick(double mouseX, double mouseY, int button, int mods) {
-
-    }
-
-    @Override
-    public void onDoubleClick(double mouseX, double mouseY, int button, int mods) {
-
-    }
-
-    @Override
-    public void onMouseMove(double mouseX, double mouseY) {
+    public void onMouseMove(Vector2d mousePosition) {
         if (!dragging) {
             return;
         }
 
-        double deltaX = mouseX - dragStartX;
-        double deltaY = mouseY - dragStartY;
+        double deltaX = mousePosition.x - dragStart.x;
+        double deltaY = mousePosition.y - dragStart.y;
+        windowDestination.add(deltaX, deltaY);
 
-        windowXDestination += deltaX;
-        windowYDestination += deltaY;
-
-        dragStartX = mouseX;
-        dragStartY = mouseY;
+        dragStart.set(mousePosition);
     }
 
     @Override
@@ -74,8 +77,40 @@ public class DraggableAddon extends WindowAddon
             return;
         }
 
-        windowXDestination = windowX;
-        windowYDestination = windowY;
+        windowDestination.set(windowX, windowY);
+    }
+
+    @Override
+    public void render() {
+        Vector2i windowPosition = window.getWindowPosition();
+        if (windowPosition.equals((int) windowDestination.x, (int) windowDestination.y)) {
+            return;
+        }
+
+        double deltaX = windowDestination.x - windowPosition.x;
+        double deltaY = windowDestination.y - windowPosition.y;
+
+        int newWindowX = windowPosition.x + (int) (deltaX * 0.2);
+        int newWindowY = windowPosition.y + (int) (deltaY * 0.2);
+        window.setWindowPosition(newWindowX, newWindowY);
+
+        Vector2d mousePosition = window.getMousePosition();
+        dragStart.set(mousePosition);
+    }
+
+    @Override
+    public boolean override() {
+        return false;
+    }
+
+    @Override
+    public void onClick(Vector2d mousePosition, int button, int mods) {
+
+    }
+
+    @Override
+    public void onDoubleClick(Vector2d mousePosition, int button, int mods) {
+
     }
 
     @Override
@@ -89,35 +124,17 @@ public class DraggableAddon extends WindowAddon
     }
 
     @Override
-    public void render() {
-        try (MemoryStack windowStack = MemoryStack.stackPush()) {
-            IntBuffer windowXBuffer = windowStack.mallocInt(1);
-            IntBuffer windowYBuffer = windowStack.mallocInt(1);
-            glfwGetWindowPos(window.getHandle(), windowXBuffer, windowYBuffer);
+    public void onWindowResize(int width, int height) {
 
-            int windowX = windowXBuffer.get();
-            int windowY = windowYBuffer.get();
+    }
 
-            if (windowX == windowXDestination && windowY == windowYDestination) {
-                return;
-            }
+    @Override
+    public void onResolutionChanged(double width, double height) {
 
-            double deltaX = windowXDestination - windowX;
-            double deltaY = windowYDestination - windowY;
+    }
 
-            int newWindowX = windowX + (int) (deltaX * 0.2);
-            int newWindowY = windowY + (int) (deltaY * 0.2);
+    @Override
+    public void onWindowInitialized(double width, double height) {
 
-            glfwSetWindowPos(window.getHandle(), newWindowX, newWindowY);
-
-            try (MemoryStack mouseStack = MemoryStack.stackPush()) {
-                DoubleBuffer x = mouseStack.mallocDouble(1);
-                DoubleBuffer y = mouseStack.mallocDouble(1);
-                glfwGetCursorPos(window.getHandle(), x, y);
-                dragStartX = x.get();
-                dragStartY = y.get();
-            }
-
-        }
     }
 }

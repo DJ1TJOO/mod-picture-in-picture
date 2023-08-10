@@ -8,6 +8,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.Window;
@@ -18,6 +19,8 @@ import nl.thomasbrants.pictureinpicture.window.addons.WindowAttributeAddon;
 import nl.thomasbrants.pictureinpicture.window.addons.WindowInputAddon;
 import nl.thomasbrants.pictureinpicture.window.addons.WindowRenderAddon;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector2d;
+import org.joml.Vector2i;
 import org.lwjgl.glfw.GLFWImage;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.stb.STBImage;
@@ -42,17 +45,14 @@ public class PictureInPictureWindow {
     private final boolean startFocused, startDecorated, startFloated;
 
     private long handle;
-    private int frameBufferWidth;
-    private int frameBufferHeight;
+    private int frameBufferWidth, frameBufferHeight;
 
     private long lastMouseRelease;
-    private int lastMouseMods;
-    private int lastMouseButton;
+    private int lastMouseMods, lastMouseButton;
     private int mouseCount;
     private boolean isMouseDown = false;
     private boolean isDragging = false;
-    private double mouseDownX, mouseDownY;
-    private double lastMouseX, lastMouseY;
+    private final Vector2d mouseDownPosition, lastMousePosition;
 
     public PictureInPictureWindow(boolean startFocused, boolean startDecorated,
                                   boolean startFloated) {
@@ -61,6 +61,9 @@ public class PictureInPictureWindow {
         this.startFloated = startFloated;
 
         this.addons = new ArrayList<>();
+
+        this.mouseDownPosition = new Vector2d();
+        this.lastMousePosition = new Vector2d();
     }
 
     /**
@@ -106,14 +109,12 @@ public class PictureInPictureWindow {
 
         // Reposition window
         if (!minecraftWindow.isFullscreen()) {
-            try (MemoryStack memoryStack = MemoryStack.stackPush()) {
-                IntBuffer x = memoryStack.callocInt(1);
-                IntBuffer y = memoryStack.callocInt(1);
-                glfwGetWindowPos(minecraftWindow.getHandle(), x, y);
-                glfwSetWindowPos(handle,
-                    (int) (x.get() + (minecraftWindow.getWidth() - windowWidth) / 2.0),
-                    (int) (y.get() + (minecraftWindow.getHeight() - windowHeight) / 2.0));
-            }
+            Vector2i minecraftWindowPosition = getWindowPosition(minecraftWindow.getHandle());
+            setWindowPosition(
+                (int) (minecraftWindowPosition.x +
+                    (minecraftWindow.getWidth() - windowWidth) / 2.0),
+                (int) (minecraftWindowPosition.y +
+                    (minecraftWindow.getHeight() - windowHeight) / 2.0));
         }
 
         // Set capabilities
@@ -124,7 +125,12 @@ public class PictureInPictureWindow {
 
         // Update size
         setWindowSize(handle, (int) windowWidth, (int) windowHeight);
-        glfwSetWindowAspectRatio(handle, (int) windowWidth, (int) windowHeight);
+
+        for (WindowAddon addon : addons.stream().filter(x -> x instanceof WindowAttributeAddon)
+            .toList()) {
+            ((WindowAttributeAddon) addon).onWindowInitialized(windowWidth, windowHeight);
+        }
+
         glfwShowWindow(handle);
     }
 
@@ -155,10 +161,10 @@ public class PictureInPictureWindow {
         long delta = current - lastMouseRelease;
         if (mouseCount > 1) {
             mouseCount = 0;
-            onDoubleClick(lastMouseX, lastMouseY, lastMouseButton, lastMouseMods);
+            onDoubleClick(lastMousePosition, lastMouseButton, lastMouseMods);
         } else if (mouseCount > 0 && delta > 500) {
             mouseCount = 0;
-            onClick(lastMouseX, lastMouseY, lastMouseButton, lastMouseMods);
+            onClick(lastMousePosition, lastMouseButton, lastMouseMods);
         }
 
         glfwMakeContextCurrent(handle);
@@ -166,16 +172,31 @@ public class PictureInPictureWindow {
             MinecraftClient.IS_SYSTEM_MAC);
         GlStateManager._viewport(0, 0, frameBufferWidth, frameBufferHeight);
 
-        glBindTexture(GL_TEXTURE_2D,
-            MinecraftClient.getInstance().getFramebuffer().getColorAttachment());
-        glEnable(GL_TEXTURE_2D);
-
         // TODO: test addons to render something
+
+        List<WindowAddon> renderAddons =
+            addons.stream().filter(addon -> addon instanceof WindowRenderAddon)
+                .toList();
+
         // Render addons
-        for (WindowAddon addon : addons.stream().filter(x -> x instanceof WindowRenderAddon)
-            .toList()) {
+        for (WindowAddon addon : renderAddons) {
             ((WindowRenderAddon) addon).render();
         }
+
+        if (renderAddons.stream().noneMatch(addon -> ((WindowRenderAddon) addon).override())) {
+            renderMinecraftFBO();
+        }
+
+        glfwSwapBuffers(handle);
+        glfwMakeContextCurrent(MinecraftClient.getInstance().getWindow().getHandle());
+    }
+
+    private void renderMinecraftFBO() {
+        Framebuffer minecraftFBO = MinecraftClient.getInstance().getFramebuffer();
+
+        glBindTexture(GL_TEXTURE_2D,
+            minecraftFBO.getColorAttachment());
+        glEnable(GL_TEXTURE_2D);
 
         glColor4f(1f, 1f, 1f, 1f);
         glBegin(GL_QUADS);
@@ -188,9 +209,6 @@ public class PictureInPictureWindow {
         glTexCoord2f(1, 0);
         glVertex2f(1, -1);
         glEnd();
-
-        glfwSwapBuffers(handle);
-        glfwMakeContextCurrent(MinecraftClient.getInstance().getWindow().getHandle());
     }
 
     private void handleWindowFocus(long window, boolean focused) {
@@ -202,34 +220,24 @@ public class PictureInPictureWindow {
     }
 
     private void handleMouseAction(long window, int button, int action, int mods) {
-        try (MemoryStack mouseStack = MemoryStack.stackPush()) {
-            DoubleBuffer x = mouseStack.mallocDouble(1);
-            DoubleBuffer y = mouseStack.mallocDouble(1);
+        Vector2d mousePosition = getMousePosition();
 
-            glfwGetCursorPos(handle, x, y);
-
-            double mouseX = x.get();
-            double mouseY = y.get();
-
-            if (action == GLFW_RELEASE) {
-                if (isDragging) {
-                    isDragging = false;
-                    onDragEnd(mouseX, mouseY, button, mods);
-                } else {
-                    mouseCount++;
-                    lastMouseRelease = System.currentTimeMillis();
-                }
-            } else if (action == GLFW_PRESS) {
-                mouseDownX = mouseX;
-                mouseDownY = mouseY;
+        if (action == GLFW_RELEASE) {
+            if (isDragging) {
+                isDragging = false;
+                onDragEnd(mousePosition, button, mods);
+            } else {
+                mouseCount++;
+                lastMouseRelease = System.currentTimeMillis();
             }
-
-            isMouseDown = action == GLFW_PRESS;
-            lastMouseButton = button;
-            lastMouseMods = mods;
-            lastMouseX = mouseX;
-            lastMouseY = mouseY;
+        } else if (action == GLFW_PRESS) {
+            mouseDownPosition.set(mousePosition);
         }
+
+        isMouseDown = action == GLFW_PRESS;
+        lastMouseButton = button;
+        lastMouseMods = mods;
+        lastMousePosition.set(mousePosition);
     }
 
     private void onWindowMove(long window, int windowX, int windowY) {
@@ -253,61 +261,71 @@ public class PictureInPictureWindow {
         }
     }
 
-    private void onDragStart(double mouseX, double mouseY, int button, int mods) {
+    private void onDragStart(Vector2d mousePosition, int button, int mods) {
         for (WindowAddon addon : addons.stream().filter(x -> x instanceof WindowInputAddon)
             .toList()) {
-            ((WindowInputAddon) addon).onDragStart(mouseX, mouseY, button, mods);
+            ((WindowInputAddon) addon).onDragStart(mousePosition, button, mods);
         }
     }
 
-    private void onDragEnd(double mouseX, double mouseY, int button, int mods) {
+    private void onDragEnd(Vector2d mousePosition, int button, int mods) {
         for (WindowAddon addon : addons.stream().filter(x -> x instanceof WindowInputAddon)
             .toList()) {
-            ((WindowInputAddon) addon).onDragEnd(mouseX, mouseY, button, mods);
+            ((WindowInputAddon) addon).onDragEnd(mousePosition, button, mods);
         }
     }
 
-    private void onClick(double mouseX, double mouseY, int button, int mods) {
+    private void onClick(Vector2d mousePosition, int button, int mods) {
         for (WindowAddon addon : addons.stream().filter(x -> x instanceof WindowInputAddon)
             .toList()) {
-            ((WindowInputAddon) addon).onClick(mouseX, mouseY, button, mods);
+            ((WindowInputAddon) addon).onClick(mousePosition, button, mods);
         }
     }
 
-    private void onDoubleClick(double mouseX, double mouseY, int button, int mods) {
+    private void onDoubleClick(Vector2d mousePosition, int button, int mods) {
         for (WindowAddon addon : addons.stream().filter(x -> x instanceof WindowInputAddon)
             .toList()) {
-            ((WindowInputAddon) addon).onDoubleClick(mouseX, mouseY, button, mods);
+            ((WindowInputAddon) addon).onDoubleClick(mousePosition, button, mods);
         }
     }
 
     private void onMouseMove(long window, double mouseX, double mouseY) {
+        Vector2d mousePosition = new Vector2d(mouseX, mouseY);
+
         if (isMouseDown && !isDragging &&
-            (Math.abs(mouseX - mouseDownX) > 6 || Math.abs(mouseY - mouseDownY) > 6)) {
+            (Math.abs(mousePosition.x - mouseDownPosition.x) > 6 ||
+                Math.abs(mousePosition.y - mouseDownPosition.y) > 6)) {
             isDragging = true;
-            onDragStart(mouseX, mouseY, lastMouseButton, lastMouseMods);
+            onDragStart(mousePosition, lastMouseButton, lastMouseMods);
         }
 
         for (WindowAddon addon : addons.stream().filter(x -> x instanceof WindowInputAddon)
             .toList()) {
-            ((WindowInputAddon) addon).onMouseMove(mouseX, mouseY);
+            ((WindowInputAddon) addon).onMouseMove(mousePosition);
         }
 
-        lastMouseX = mouseX;
-        lastMouseY = mouseY;
+        lastMousePosition.set(mousePosition);
     }
 
     private void setWindowSize(long window, int width, int height) {
         frameBufferWidth = width;
         frameBufferHeight = height;
+
+        for (WindowAddon addon : addons.stream().filter(x -> x instanceof WindowAttributeAddon)
+            .toList()) {
+            ((WindowAttributeAddon) addon).onWindowResize(width, height);
+        }
     }
 
     public void onResolutionChanged() {
         Window minecraftWindow = MinecraftClient.getInstance().getWindow();
-        double windowWidth = minecraftWindow.getWidth();
-        double windowHeight = minecraftWindow.getHeight();
+        double windowWidth = minecraftWindow.getFramebufferWidth();
+        double windowHeight = minecraftWindow.getFramebufferHeight();
 
-        glfwSetWindowAspectRatio(handle, (int) windowWidth, (int) windowHeight);
+        for (WindowAddon addon : addons.stream().filter(x -> x instanceof WindowAttributeAddon)
+            .toList()) {
+            ((WindowAttributeAddon) addon).onResolutionChanged(windowWidth, windowHeight);
+        }
     }
 
     private void setWindowIcon() {
@@ -411,6 +429,62 @@ public class PictureInPictureWindow {
         return handle != 0;
     }
 
+    public Vector2d getMousePosition() {
+        try (MemoryStack mouseStack = MemoryStack.stackPush()) {
+            DoubleBuffer mouseXBuffer = mouseStack.mallocDouble(1);
+            DoubleBuffer mouseYBuffer = mouseStack.mallocDouble(1);
+            glfwGetCursorPos(handle, mouseXBuffer, mouseYBuffer);
+            return new Vector2d(mouseXBuffer.get(), mouseYBuffer.get());
+        }
+    }
+
+    public Vector2i getWindowPosition() {
+        return getWindowPosition(handle);
+    }
+
+    private Vector2i getWindowPosition(long handle) {
+        try (MemoryStack windowPosStack = MemoryStack.stackPush()) {
+            IntBuffer windowXBuffer = windowPosStack.callocInt(1);
+            IntBuffer windowYBuffer = windowPosStack.callocInt(1);
+            glfwGetWindowPos(handle, windowXBuffer, windowYBuffer);
+            return new Vector2i(windowXBuffer.get(), windowYBuffer.get());
+        }
+    }
+
+    public Vector2i getWindowSize() {
+        try (MemoryStack windowPosStack = MemoryStack.stackPush()) {
+            IntBuffer windowWidthBuffer = windowPosStack.callocInt(1);
+            IntBuffer windowHeightBuffer = windowPosStack.callocInt(1);
+            glfwGetWindowSize(handle, windowWidthBuffer, windowHeightBuffer);
+            return new Vector2i(windowWidthBuffer.get(), windowHeightBuffer.get());
+        }
+    }
+
+    public void setWindowPosition(int windowX, int windowY) {
+        glfwSetWindowPos(handle, windowX, windowY);
+    }
+
+    /**
+     * @return Whether the window is maximized
+     */
+    public boolean isMaximized() {
+        return GLFWTOBoolean(glfwGetWindowAttrib(handle, GLFW_MAXIMIZED));
+    }
+
+    /**
+     * Set window to be minimized
+     */
+    public void maximize() {
+        glfwMaximizeWindow(handle);
+    }
+
+    /**
+     * Set window to be minimized
+     */
+    public void minimize() {
+        glfwRestoreWindow(handle);
+    }
+
     /**
      * @return Whether the window is focused
      */
@@ -467,6 +541,14 @@ public class PictureInPictureWindow {
         glfwSetWindowAttrib(handle, GLFW_FLOATING, state ? GLFW_TRUE : GLFW_FALSE);
     }
 
+    public int getFrameBufferWidth() {
+        return frameBufferWidth;
+    }
+
+    public int getFrameBufferHeight() {
+        return frameBufferHeight;
+    }
+
     /**
      * Toggle window floating
      */
@@ -484,10 +566,17 @@ public class PictureInPictureWindow {
                 return true;
             }
 
+            if (addon instanceof WindowAttributeAddon) {
+                Window minecraftWindow = MinecraftClient.getInstance().getWindow();
+                double windowWidth = minecraftWindow.getFramebufferWidth();
+                double windowHeight = minecraftWindow.getFramebufferHeight();
+                ((WindowAttributeAddon) addon).onWindowInitialized(windowWidth, windowHeight);
+            }
+
             addons.add(addon);
             return true;
         } catch (Exception e) {
-            PIP_LOGGER.warn("Error while adding addon: " + e.toString());
+            PIP_LOGGER.warn("Error while adding addon: " + e);
             return false;
         }
     }
@@ -501,6 +590,6 @@ public class PictureInPictureWindow {
     }
 
     private boolean GLFWTOBoolean(int value) {
-        return value > 0 ? true : false;
+        return value > 0;
     }
 }

@@ -6,4 +6,6 @@ package nl.thomasbrants.pictureinpicture.window.addons;
 
 public interface WindowRenderAddon {
     void render();
+
+    boolean override();
 }

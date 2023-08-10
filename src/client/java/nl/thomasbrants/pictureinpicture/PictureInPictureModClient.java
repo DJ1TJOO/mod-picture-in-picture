@@ -7,8 +7,7 @@ package nl.thomasbrants.pictureinpicture;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import nl.thomasbrants.pictureinpicture.window.PictureInPictureWindow;
-import nl.thomasbrants.pictureinpicture.window.addons.DraggableAddon;
-import nl.thomasbrants.pictureinpicture.window.addons.FloatableAddon;
+import nl.thomasbrants.pictureinpicture.window.addons.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,12 +31,17 @@ public class PictureInPictureModClient implements ClientModInitializer {
     }
 
     public void createPictureInPictureWindow() {
+//        TODO: default settings when creating a new window
         PictureInPictureWindow pictureInPictureWindow =
             new PictureInPictureWindow(false, true, false);
         pictureInPictureWindow.create();
 
+//        TODO: make window overview
         pictureInPictureWindow.registerAddon(DraggableAddon.class);
-        pictureInPictureWindow.registerAddon(FloatableAddon.class);
+        pictureInPictureWindow.registerAddon(FloatableToggleAddon.class);
+        pictureInPictureWindow.registerAddon(DecoratedToggleAddon.class);
+        pictureInPictureWindow.registerAddon(ForceRenderAspectRatioAddon.class);
+        pictureInPictureWindow.registerAddon(ForceWindowAspectRatioAddon.class);
 
         pictureInPictureWindows.add(pictureInPictureWindow);
     }

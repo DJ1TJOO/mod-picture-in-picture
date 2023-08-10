@@ -10,4 +10,10 @@ public interface WindowAttributeAddon {
     void onWindowFocus();
 
     void onWindowBlur();
+
+    void onWindowResize(int width, int height);
+
+    void onResolutionChanged(double width, double height);
+
+    void onWindowInitialized(double width, double height);
 }

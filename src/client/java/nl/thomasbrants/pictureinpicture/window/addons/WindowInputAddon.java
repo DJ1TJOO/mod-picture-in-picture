@@ -4,15 +4,17 @@
 
 package nl.thomasbrants.pictureinpicture.window.addons;
 
+import org.joml.Vector2d;
+
 public interface WindowInputAddon {
 
-    void onDragStart(double mouseX, double mouseY, int button, int mods);
+    void onDragStart(Vector2d mousePosition, int button, int mods);
 
-    void onDragEnd(double mouseX, double mouseY, int button, int mods);
+    void onDragEnd(Vector2d mousePosition, int button, int mods);
 
-    void onClick(double mouseX, double mouseY, int button, int mods);
+    void onClick(Vector2d mousePosition, int button, int mods);
 
-    void onDoubleClick(double mouseX, double mouseY, int button, int mods);
+    void onDoubleClick(Vector2d mousePosition, int button, int mods);
 
-    void onMouseMove(double mouseX, double mouseY);
+    void onMouseMove(Vector2d mousePosition);
 }
