@@ -32,6 +32,7 @@ public class ScreenHandler {
             PictureInPictureModClient.getInstance().setReadyToCreateWindows(false);
             PictureInPictureModClient.getInstance()
                 .updateWindows(new ArrayList<>(), PictureInPictureModClient.getConfig().windows);
+            PictureInPictureModClient.getInstance().onCreatedWindows();
         }
 
         if (screen instanceof TitleScreen) {

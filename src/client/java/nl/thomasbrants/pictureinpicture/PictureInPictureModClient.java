@@ -29,6 +29,7 @@ import static nl.thomasbrants.pictureinpicture.PictureInPictureMod.PIP_LOGGER;
 public class PictureInPictureModClient implements ClientModInitializer {
     private static PictureInPictureModClient instance;
     private boolean readyToCreateWindows = false;
+    private boolean createdWindows = false;
 
     public static PictureInPictureModClient getInstance() {
         return instance;
@@ -43,6 +44,10 @@ public class PictureInPictureModClient implements ClientModInitializer {
 
         ConfigHolder<ModConfig> configHolder = AutoConfig.getConfigHolder(ModConfig.class);
         return (_modConfig = configHolder.getConfig());
+    }
+
+    public static void saveConfig() {
+        AutoConfig.getConfigHolder(ModConfig.class).save();
     }
 
     private List<PictureInPictureWindow> pictureInPictureWindows;
@@ -77,7 +82,7 @@ public class PictureInPictureModClient implements ClientModInitializer {
     }
 
     void updateWindows(List<WindowEntry> oldWindows, List<WindowEntry> newWindows) {
-        // Close removed windows
+        // Close removed newWindows
         List<Long> windowsToDestroy =
             oldWindows.stream()
                 .map(WindowEntry::getHandle)
@@ -106,7 +111,7 @@ public class PictureInPictureModClient implements ClientModInitializer {
             //        TODO: add all addons
         }
 
-        // Open new windows
+        // Open new newWindows
         List<WindowEntry> windowsToOpen =
             newWindows.stream()
                 .filter(x -> x.getHandle() == 0)
@@ -117,7 +122,7 @@ public class PictureInPictureModClient implements ClientModInitializer {
                 .setHandle(entry.getHandle());
         }
 
-        AutoConfig.getConfigHolder(ModConfig.class).save();
+        saveConfig();
     }
 
     public void createPictureInPictureWindow(WindowEntry entry) {
@@ -161,8 +166,19 @@ public class PictureInPictureModClient implements ClientModInitializer {
     }
 
     public void renderWindows() {
-//        TODO: update config on close
-        pictureInPictureWindows.removeIf(x -> !x.isOpen());
+        if (!createdWindows) {
+            return;
+        }
+
+        pictureInPictureWindows.removeIf(window -> !window.isOpen());
+
+        ModConfig config = getConfig();
+        List<WindowEntry> newWindows = new ArrayList<>(config.windows);
+        newWindows.removeIf(windowEntry -> pictureInPictureWindows.stream()
+            .noneMatch(window -> window.getHandle() == windowEntry.getHandle()));
+        config.windows = newWindows;
+        saveConfig();
+
         pictureInPictureWindows.forEach(PictureInPictureWindow::render);
     }
 
@@ -176,5 +192,9 @@ public class PictureInPictureModClient implements ClientModInitializer {
 
     void setReadyToCreateWindows(boolean readyToCreateWindows) {
         this.readyToCreateWindows = readyToCreateWindows;
+    }
+
+    void onCreatedWindows() {
+        this.createdWindows = true;
     }
 }

@@ -17,7 +17,8 @@ import java.util.function.Supplier;
 @Environment(EnvType.CLIENT)
 public class WindowListBuilder extends
     AbstractListBuilder<WindowEntry, WindowListListEntry, WindowListBuilder> {
-    private Function<WindowListListEntry, WindowListListEntry.WindowListCell> createNewInstance;
+    private Function<WindowListListEntry, WindowListCell>
+        createNewInstance;
     private final BiConsumer<List<WindowEntry>, List<WindowEntry>> saveConsumer;
 
     public WindowListBuilder(Text resetButtonKey, Text fieldNameKey, List<WindowEntry> value,
@@ -72,7 +73,7 @@ public class WindowListBuilder extends
     }
 
     public WindowListBuilder setCreateNewInstance(
-        Function<WindowListListEntry, WindowListListEntry.WindowListCell> createNewInstance) {
+        Function<WindowListListEntry, WindowListCell> createNewInstance) {
         this.createNewInstance = createNewInstance;
         return this;
     }
@@ -125,12 +126,13 @@ public class WindowListBuilder extends
 
     public @NotNull WindowListListEntry build() {
         WindowListListEntry entry =
-            new WindowListListEntry(this.getFieldNameKey(), this.value, this.isExpanded(),
-                null, this.getSaveConsumer().andThen((List<WindowEntry> newValue) -> {
-                this.saveConsumer.accept(this.value, newValue);
-            }), this.defaultValue,
-                this.getResetButtonKey(), this.isRequireRestart(), this.isDeleteButtonEnabled(),
-                this.isInsertInFront());
+            new WindowListListEntry(this.value, this.defaultValue,
+                this.getSaveConsumer().andThen((List<WindowEntry> newValue) -> {
+                    this.saveConsumer.accept(this.value, newValue);
+                }), null, this.getFieldNameKey(), this.getResetButtonKey(), this.isInsertInFront(),
+                this.isDeleteButtonEnabled(), this.isExpanded(),
+                this.isRequireRestart()
+            );
         if (this.createNewInstance != null) {
             entry.setCreateNewInstance(this.createNewInstance);
         }

@@ -15,6 +15,11 @@ public class WindowEntry {
         this.draggable = draggable;
     }
 
+    public WindowEntry(String name, boolean draggable, long handle) {
+        this(name, draggable);
+        this.handle = handle;
+    }
+
     public String getName() {
         return name;
     }
