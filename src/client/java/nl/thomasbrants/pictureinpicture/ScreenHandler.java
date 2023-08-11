@@ -15,6 +15,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import nl.thomasbrants.pictureinpicture.config.ModConfig;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static nl.thomasbrants.pictureinpicture.PictureInPictureMod.PIP_LOGGER;
@@ -25,15 +26,24 @@ public class ScreenHandler {
 
     public static void afterInitScreen(MinecraftClient client, Screen screen, int windowWidth,
                                        int windowHeight) {
-        PIP_LOGGER.info("Initializing {}", screen.getClass().getName());
+
+        // Create first windows when title screen is loaded for the first time
+        if (PictureInPictureModClient.getInstance().isReadyToCreateWindows()) {
+            PictureInPictureModClient.getInstance().setReadyToCreateWindows(false);
+            PictureInPictureModClient.getInstance()
+                .updateWindows(new ArrayList<>(), PictureInPictureModClient.getConfig().windows);
+        }
 
         if (screen instanceof TitleScreen) {
+            PIP_LOGGER.info("Initializing {}", screen.getClass().getName());
             initTitleScreen(client, screen, windowWidth, windowHeight);
         }
     }
 
     private static void initTitleScreen(MinecraftClient client, Screen screen, int windowWidth,
                                         int windowHeight) {
+
+
         final List<ClickableWidget> buttons = Screens.getButtons(screen);
 
         buttons.add(
@@ -44,6 +54,8 @@ public class ScreenHandler {
                 button -> {
                     MinecraftClient.getInstance().setScreen(
                         AutoConfig.getConfigScreen(ModConfig.class, screen).get());
+//                    PictureInPictureModClient.getInstance().createPictureInPictureWindow();
+
                 }, Text.translatable("narrator.picture-in-picture.pop_out")));
     }
 }

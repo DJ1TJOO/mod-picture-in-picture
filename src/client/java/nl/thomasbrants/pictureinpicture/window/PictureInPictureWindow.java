@@ -49,6 +49,8 @@ public class PictureInPictureWindow {
     private final List<WindowAddon> addons;
     private final boolean startFocused, startDecorated, startFloated;
 
+    private String name;
+
     private long handle;
     private int frameBufferWidth, frameBufferHeight;
     private boolean initialized = false;
@@ -61,10 +63,11 @@ public class PictureInPictureWindow {
     private final Vector2d mouseDownPosition, lastMousePosition;
 
     public PictureInPictureWindow(boolean startFocused, boolean startDecorated,
-                                  boolean startFloated) {
+                                  boolean startFloated, String name) {
         this.startFocused = startFocused;
         this.startDecorated = startDecorated;
         this.startFloated = startFloated;
+        this.name = name;
 
         this.addons = new ArrayList<>();
 
@@ -97,7 +100,7 @@ public class PictureInPictureWindow {
         double windowHeight = minecraftWindow.getHeight();
 
         handle = glfwCreateWindow((int) windowWidth, (int) windowHeight,
-            I18n.translate("text.picture-in-picture.title"),
+            I18n.translate("text.picture-in-picture.title") + ": " + name,
             NULL,
             minecraftWindow.getHandle());
 
@@ -610,6 +613,33 @@ public class PictureInPictureWindow {
 
     public void removeAddon(String id) {
         addons.removeIf(x -> x.getId().equals(id));
+    }
+
+    public <T extends WindowAddon> boolean toggleAddon(Class<T> addonClass) {
+        return toggleAddon(addonClass,
+            addons.stream().filter(addonClass::isInstance).map(WindowAddon::getId)
+                .findFirst().isEmpty());
+    }
+
+    public <T extends WindowAddon> boolean toggleAddon(Class<T> addonClass, boolean enable) {
+        if (enable) {
+            return registerAddon(addonClass);
+        }
+
+        removeAddon(
+            addons.stream().filter(addonClass::isInstance).map(WindowAddon::getId)
+                .findFirst()
+                .orElse(""));
+        return true;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+        glfwSetWindowTitle(handle, I18n.translate("text.picture-in-picture.title") + ": " + name);
     }
 
     private int booleanToGLFW(boolean value) {
