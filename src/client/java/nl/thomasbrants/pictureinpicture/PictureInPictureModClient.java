@@ -132,6 +132,7 @@ public class PictureInPictureModClient implements ClientModInitializer {
 
         pictureInPictureWindow.toggleAddon(DraggableAddon.class, entry.isDraggable());
 
+//        TODO: create hide addon
 //        TODO: update from settings
         pictureInPictureWindow.registerAddon(FloatableToggleAddon.class);
         pictureInPictureWindow.registerAddon(DecoratedToggleAddon.class);
