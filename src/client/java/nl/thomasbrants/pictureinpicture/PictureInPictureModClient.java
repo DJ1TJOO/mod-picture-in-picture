@@ -15,7 +15,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import nl.thomasbrants.pictureinpicture.config.ModConfig;
 import nl.thomasbrants.pictureinpicture.config.WindowEntry;
-import nl.thomasbrants.pictureinpicture.modmenu.WindowListBuilder;
+import nl.thomasbrants.pictureinpicture.modmenu.windowlist.WindowListBuilder;
 import nl.thomasbrants.pictureinpicture.window.PictureInPictureWindow;
 import nl.thomasbrants.pictureinpicture.window.addons.*;
 import org.jetbrains.annotations.Nullable;

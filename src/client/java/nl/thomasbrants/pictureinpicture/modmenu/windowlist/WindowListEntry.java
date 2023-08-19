@@ -1,4 +1,4 @@
-package nl.thomasbrants.pictureinpicture.modmenu;
+package nl.thomasbrants.pictureinpicture.modmenu.windowlist;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.AbstractParentElement;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public class WindowListCell extends AbstractParentElement
+public class WindowListEntry extends AbstractParentElement
     implements Selectable {
     private static final Identifier DRAGGABLE_BUTTON_ICON =
         new Identifier(PictureInPictureMod.MOD_ID, "textures/gui/draggable.png");
@@ -29,7 +29,7 @@ public class WindowListCell extends AbstractParentElement
             .getString();
 
     private final @Nullable WindowEntry startEntry;
-    protected final WindowListListEntry listListEntry;
+    protected final WindowList listListEntry;
     private Supplier<Optional<Text>> errorSupplier;
 
     protected TextFieldWidget nameWidget;
@@ -37,16 +37,15 @@ public class WindowListCell extends AbstractParentElement
     private boolean isSelected;
     private boolean isHovered;
 
-    public WindowListCell(@Nullable WindowEntry value,
-                          WindowListListEntry listListEntry) {
+    public WindowListEntry(@Nullable WindowEntry value,
+                           WindowList listListEntry) {
         this.startEntry = value;
         this.listListEntry = listListEntry;
 
         this.createWidgets(this.substituteDefault(value));
 
-        this.setErrorSupplier(() -> Optional.ofNullable(listListEntry.cellErrorSupplier)
-            .flatMap((cellErrorFn) -> cellErrorFn.apply(this.getValue())));
-
+        this.setErrorSupplier(() -> Optional.ofNullable(listListEntry.entryErrorSupplier)
+            .flatMap((entryErrorFn) -> entryErrorFn.apply(this.getValue())));
     }
 
     public void render(MatrixStack matrices, int index, int y, int x, int entryWidth,
@@ -114,7 +113,7 @@ public class WindowListCell extends AbstractParentElement
         return this.isSelected ? SelectionType.FOCUSED :
             (this.isHovered ? SelectionType.HOVERED : SelectionType.NONE);
     }
-    
+
     public WindowEntry getValue() {
         return new WindowEntry(this.nameWidget.getText(), this.draggableWidget.isToggled(),
             startEntry != null ? startEntry.getHandle() : 0);
@@ -132,7 +131,7 @@ public class WindowListCell extends AbstractParentElement
         this.isSelected = isSelected;
     }
 
-    public int getCellHeight() {
+    public int getEntryHeight() {
         return 20;
     }
 
@@ -176,7 +175,7 @@ public class WindowListCell extends AbstractParentElement
         List<WindowEntry> entriesWithName = this.listListEntry.getValue().stream()
             .filter(x -> x.getName().equals(value.getName())).toList();
 
-        if ((this.listListEntry.cells.stream().noneMatch(x -> x.nameWidget.isActive()) ||
+        if ((this.listListEntry.entries.stream().noneMatch(x -> x.nameWidget.isActive()) ||
             this.nameWidget.isActive()) && entriesWithName.size() > 1) {
             return Optional.of(
                 Text.translatable("text.picture-in-picture.window.name_taken"));

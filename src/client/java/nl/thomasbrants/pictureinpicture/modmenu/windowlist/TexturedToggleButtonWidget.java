@@ -1,4 +1,4 @@
-package nl.thomasbrants.pictureinpicture.modmenu;
+package nl.thomasbrants.pictureinpicture.modmenu.windowlist;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.api.EnvType;
