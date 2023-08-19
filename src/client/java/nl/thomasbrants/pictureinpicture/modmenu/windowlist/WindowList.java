@@ -264,7 +264,7 @@ public class WindowList extends AbstractConfigListEntry<List<WindowEntry>> imple
         return this.entries.stream().map(WindowListEntry::getValue).toList();
     }
 
-    protected WindowListEntry getFromValue(WindowEntry value) {
+    private WindowListEntry getFromValue(WindowEntry value) {
         return this.createNewEntry.apply(value, this);
     }
 

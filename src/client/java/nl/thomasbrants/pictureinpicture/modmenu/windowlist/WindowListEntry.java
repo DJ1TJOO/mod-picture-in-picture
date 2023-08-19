@@ -11,7 +11,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import nl.thomasbrants.pictureinpicture.PictureInPictureMod;
 import nl.thomasbrants.pictureinpicture.config.WindowEntry;
-import org.jetbrains.annotations.NotNull;
+import nl.thomasbrants.pictureinpicture.widgets.TexturedToggleButtonWidget;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -78,7 +78,6 @@ public class WindowListEntry extends AbstractParentElement
             new TextFieldWidget(MinecraftClient.getInstance().textRenderer, 0, 0, 100, 18,
                 Text.empty());
         this.nameWidget.setSuggestion(finalValue.getName().length() > 0 ? "" : PLACEHOLDER);
-        this.nameWidget.setTextPredicate(this::isValidText);
         this.nameWidget.setMaxLength(Integer.MAX_VALUE);
         this.nameWidget.setDrawsBackground(false);
         this.nameWidget.setText(finalValue.getName());
@@ -121,10 +120,6 @@ public class WindowListEntry extends AbstractParentElement
 
     private WindowEntry substituteDefault(@Nullable WindowEntry value) {
         return value == null ? new WindowEntry("", false) : value;
-    }
-
-    protected boolean isValidText(@NotNull String text) {
-        return true;
     }
 
     public void updateSelected(boolean isSelected) {

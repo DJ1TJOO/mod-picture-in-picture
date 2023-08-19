@@ -1,6 +1,7 @@
 package nl.thomasbrants.pictureinpicture.modmenu.windowlist;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import me.shedaniel.math.Rectangle;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.Element;
@@ -17,11 +18,12 @@ import java.util.List;
 import java.util.Optional;
 
 public class WindowListHeader extends DrawableHelper implements Element {
-    protected static final Identifier
+    private static final Identifier
         CONFIG_TEX = new Identifier("cloth-config2", "textures/gui/cloth_config.png");
 
-    private WindowListLabelWidget labelWidget;
+    private WindowListHeaderClickableWidget labelWidget;
     private ClickableWidget resetWidget;
+    private final Rectangle rectangle = new Rectangle();
 
     private final WindowList list;
 
@@ -39,7 +41,7 @@ public class WindowListHeader extends DrawableHelper implements Element {
     }
 
     private void createWidgets(Text resetButtonKey, ButtonWidget.PressAction resetAction) {
-        this.labelWidget = new WindowListLabelWidget(this);
+        this.labelWidget = new WindowListHeaderClickableWidget(this);
 
         this.resetWidget = ButtonWidget.builder(resetButtonKey, resetAction).dimensions(0, 0,
             MinecraftClient.getInstance().textRenderer.getWidth(resetButtonKey) + 6,
@@ -63,7 +65,7 @@ public class WindowListHeader extends DrawableHelper implements Element {
 
         // Arrow
         this.drawTexture(matrices, x - 15, y + 5, 33,
-            (this.labelWidget.rectangle.contains(mouseX, mouseY) && !insideCreateNew &&
+            (this.rectangle.contains(mouseX, mouseY) && !insideCreateNew &&
                 !insideDelete ? 18 : 0) + (this.list.isExpanded() ? 9 : 0), 9, 9);
 
         // Add and remove
@@ -82,7 +84,7 @@ public class WindowListHeader extends DrawableHelper implements Element {
             this.list.getDisplayedFieldName().asOrderedText(),
             this.deleteButtonEnabled ? (float) (x + 24) : (float) (x + 24 - 9),
             (float) (y + 6),
-            this.labelWidget.rectangle.contains(mouseX, mouseY) &&
+            this.rectangle.contains(mouseX, mouseY) &&
                 !this.resetWidget.isMouseOver(mouseX, mouseY) && !insideDelete &&
                 !insideCreateNew ? -1638890 : this.list.getPreferredTextColor());
 
@@ -111,27 +113,31 @@ public class WindowListHeader extends DrawableHelper implements Element {
     }
 
     public void updateLabelWidget(int x, int y, int entryWidth) {
-        this.labelWidget.rectangle.x = x - 15;
-        this.labelWidget.rectangle.y = y;
-        this.labelWidget.rectangle.width = entryWidth + 15;
-        this.labelWidget.rectangle.height = 24;
+        this.rectangle.x = x - 15;
+        this.rectangle.y = y;
+        this.rectangle.width = entryWidth + 15;
+        this.rectangle.height = 24;
     }
 
     boolean isInsideCreateNew(double mouseX, double mouseY) {
         return this.insertButtonEnabled &&
-            mouseX >= (double) (this.labelWidget.rectangle.x + 12) &&
-            mouseY >= (double) (this.labelWidget.rectangle.y + 3) &&
-            mouseX <= (double) (this.labelWidget.rectangle.x + 12 + 11) &&
-            mouseY <= (double) (this.labelWidget.rectangle.y + 3 + 11);
+            mouseX >= (double) (this.rectangle.x + 12) &&
+            mouseY >= (double) (this.rectangle.y + 3) &&
+            mouseX <= (double) (this.rectangle.x + 12 + 11) &&
+            mouseY <= (double) (this.rectangle.y + 3 + 11);
     }
 
     boolean isInsideDelete(double mouseX, double mouseY) {
         return this.deleteButtonEnabled && mouseX >=
-            (double) (this.labelWidget.rectangle.x +
+            (double) (this.rectangle.x +
                 (this.insertButtonEnabled ? 25 : 12)) &&
-            mouseY >= (double) (this.labelWidget.rectangle.y + 3) && mouseX <=
-            (double) (this.labelWidget.rectangle.x + (this.insertButtonEnabled ? 25 : 12) +
-                11) && mouseY <= (double) (this.labelWidget.rectangle.y + 3 + 11);
+            mouseY >= (double) (this.rectangle.y + 3) && mouseX <=
+            (double) (this.rectangle.x + (this.insertButtonEnabled ? 25 : 12) +
+                11) && mouseY <= (double) (this.rectangle.y + 3 + 11);
+    }
+
+    public boolean isInsideHeader(double mouseX, double mouseY) {
+        return this.rectangle.contains(mouseX, mouseY);
     }
 
     boolean isInsideReset(double mouseX, double mouseY) {

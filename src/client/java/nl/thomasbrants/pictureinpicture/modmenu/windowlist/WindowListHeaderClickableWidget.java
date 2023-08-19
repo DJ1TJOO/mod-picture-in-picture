@@ -1,13 +1,11 @@
 package nl.thomasbrants.pictureinpicture.modmenu.windowlist;
 
-import me.shedaniel.math.Rectangle;
 import net.minecraft.client.gui.Element;
 
-public class WindowListLabelWidget implements Element {
+public class WindowListHeaderClickableWidget implements Element {
     private final WindowListHeader windowListHeader;
-    protected Rectangle rectangle = new Rectangle();
 
-    public WindowListLabelWidget(WindowListHeader windowListHeader) {
+    public WindowListHeaderClickableWidget(WindowListHeader windowListHeader) {
         this.windowListHeader = windowListHeader;
     }
 
@@ -27,7 +25,7 @@ public class WindowListLabelWidget implements Element {
             return true;
         }
 
-        if (this.rectangle.contains(mouseX, mouseY)) {
+        if (windowListHeader.isInsideHeader(mouseX, mouseY)) {
             windowListHeader.toggleExpanded();
             return true;
         }

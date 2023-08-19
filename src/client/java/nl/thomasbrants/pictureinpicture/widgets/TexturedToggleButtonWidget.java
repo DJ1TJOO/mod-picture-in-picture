@@ -1,4 +1,4 @@
-package nl.thomasbrants.pictureinpicture.modmenu.windowlist;
+package nl.thomasbrants.pictureinpicture.widgets;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.api.EnvType;
@@ -20,7 +20,7 @@ public class TexturedToggleButtonWidget
     private final int textureWidth;
     private final int textureHeight;
 
-    protected boolean toggled;
+    private boolean toggled;
 
     public TexturedToggleButtonWidget(int x, int y, int width, int height, int u, int v,
                                       int pressedUOffset,
