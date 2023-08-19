@@ -33,7 +33,6 @@ import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -44,7 +43,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class PictureInPictureWindow {
     private static final List<String> RENDER_ORDER =
-        new ArrayList<>(Arrays.asList("draggable", "zoom", "force-render-aspect-ratio"));
+        new ArrayList<>(List.of("draggable", "zoom", "force-render-aspect-ratio"));
 
     private final List<WindowAddon> addons;
     private final boolean startFocused, startDecorated, startFloated;

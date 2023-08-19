@@ -1,6 +1,5 @@
 package nl.thomasbrants.pictureinpicture.modmenu.windowlist;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.Expandable;
 import me.shedaniel.clothconfig2.api.ReferenceProvider;
@@ -10,12 +9,9 @@ import me.shedaniel.math.Rectangle;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import nl.thomasbrants.pictureinpicture.config.WindowEntry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,35 +24,29 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class WindowList extends AbstractConfigListEntry<List<WindowEntry>> implements
     Expandable {
-    protected static final Identifier
-        CONFIG_TEX = new Identifier("cloth-config2", "textures/gui/cloth_config.png");
 
-    protected @NotNull Supplier<List<WindowEntry>> defaultValue;
-    protected List<WindowEntry> original;
+    private final @NotNull Supplier<List<WindowEntry>> defaultValue;
+    private final List<WindowEntry> original;
 
-    protected final BiFunction<WindowEntry, WindowList, WindowListEntry>
+    private final BiFunction<WindowEntry, WindowList, WindowListEntry>
         createNewEntry;
-    protected @NotNull Function<WindowList, WindowListEntry>
+    private @NotNull Function<WindowList, WindowListEntry>
         createNewInstance;
-    protected Function<WindowEntry, Optional<Text>> entryErrorSupplier;
+    private Function<WindowEntry, Optional<Text>> entryErrorSupplier;
     private @Nullable Supplier<Optional<Text[]>> tooltipSupplier;
 
-    protected final @NotNull List<WindowListEntry> entries;
-    protected final @NotNull List<Object> widgets;
+    private final @NotNull List<WindowListEntry> entries;
+    private final WindowListHeader header;
 
-    protected boolean expanded;
-    protected boolean insertButtonEnabled;
-    protected boolean deleteButtonEnabled;
-    protected boolean insertInFront;
+    private boolean expanded;
+    private boolean insertInFront;
 
-    protected ListLabelWidget labelWidget;
-    protected ClickableWidget resetWidget;
-
-    protected @Nullable Text addTooltip;
-    protected @Nullable Text removeTooltip;
+    private @Nullable Text addTooltip;
+    private @Nullable Text removeTooltip;
 
     public WindowList(List<WindowEntry> value, Supplier<List<WindowEntry>> defaultValue,
                       Consumer<List<WindowEntry>> saveConsumer,
@@ -106,17 +96,21 @@ public class WindowList extends AbstractConfigListEntry<List<WindowEntry>> imple
         this.removeTooltip = Text.translatable("text.cloth-config.list.remove");
 
         this.insertInFront = insertInFront;
-        this.insertButtonEnabled = true;
-        this.deleteButtonEnabled = deleteButtonEnabled;
 
         this.setExpanded(defaultExpanded);
-
-        this.widgets = new ArrayList<>();
-        this.createWidgets(defaultValue, resetButtonKey);
 
         this.entries = new ArrayList<>();
         this.createNewEntry = createNewEntry;
         this.createEntries(value);
+
+        this.header =
+            new WindowListHeader(this, true, deleteButtonEnabled, resetButtonKey, (widget) -> {
+                this.entries.forEach(WindowListEntry::onDelete);
+                this.entries.clear();
+
+                this.entries.addAll(defaultValue.get().stream().map(this::getFromValue).toList());
+                this.entries.forEach(WindowListEntry::onAdd);
+            });
     }
 
     public void render(MatrixStack matrices, int index, int y, int x, int entryWidth,
@@ -136,45 +130,9 @@ public class WindowList extends AbstractConfigListEntry<List<WindowEntry>> imple
             }
         }
 
-        // Textures
-        RenderSystem.setShaderTexture(0, CONFIG_TEX);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
-        WindowListEntry active = getActive();
-
-        boolean insideCreateNew = this.isInsideCreateNew(mouseX, mouseY);
-        boolean insideDelete = this.isInsideDelete(mouseX, mouseY);
-
-        // Arrow
-        this.drawTexture(matrices, x - 15, y + 5, 33,
-            (this.labelWidget.rectangle.contains(mouseX, mouseY) && !insideCreateNew &&
-                !insideDelete ? 18 : 0) + (this.expanded ? 9 : 0), 9, 9);
-
-        // Add and remove
-        if (this.isInsertButtonEnabled()) {
-            this.drawTexture(matrices, x - 15 + 13, y + 5, 42, insideCreateNew ? 9 : 0, 9, 9);
-        }
-
-        if (this.isDeleteButtonEnabled()) {
-            this.drawTexture(matrices, x - 15 + (this.isInsertButtonEnabled() ? 26 : 13), y + 5, 51,
-                active == null ? 0 : (insideDelete ? 18 : 9), 9, 9);
-        }
-
-        // Label
-        MinecraftClient.getInstance().textRenderer.drawWithShadow(matrices,
-            this.getDisplayedFieldName().asOrderedText(),
-            this.isDeleteButtonEnabled() ? (float) (x + 24) : (float) (x + 24 - 9), (float) (y + 6),
-            this.labelWidget.rectangle.contains(mouseX, mouseY) &&
-                !this.resetWidget.isMouseOver(mouseX, mouseY) && !insideDelete &&
-                !insideCreateNew ? -1638890 : this.getPreferredTextColor());
-
-        // Reset
-        this.resetWidget.setX(x + entryWidth - this.resetWidget.getWidth());
-        this.resetWidget.setY(y);
-        this.resetWidget.active =
-            this.isEditable() && this.getDefaultValue().isPresent() && !this.isMatchDefault();
-
-        this.resetWidget.render(matrices, mouseX, mouseY, delta);
+        this.header.render(matrices, index, y, x, entryWidth, entryHeight, mouseX, mouseY,
+            isHovered,
+            delta);
 
         // Render entries
         if (!this.expanded) {
@@ -196,7 +154,7 @@ public class WindowList extends AbstractConfigListEntry<List<WindowEntry>> imple
     }
 
     @Nullable
-    private WindowListEntry getActive() {
+    public WindowListEntry getActive() {
         if (!this.expanded || this.getFocused() == null ||
             !(this.getFocused() instanceof WindowListEntry)) {
             return null;
@@ -215,44 +173,20 @@ public class WindowList extends AbstractConfigListEntry<List<WindowEntry>> imple
         for (WindowEntry entry : value) {
             this.entries.add(createNewEntry.apply(entry, this));
         }
-
-        this.widgets.addAll(this.entries);
-    }
-
-    private void createWidgets(@NotNull Supplier<List<WindowEntry>> defaultValue,
-                               Text resetButtonKey) {
-        this.labelWidget = new ListLabelWidget(this);
-        this.widgets.add(this.labelWidget);
-
-        this.resetWidget = ButtonWidget.builder(resetButtonKey, (widget) -> {
-            this.widgets.removeAll(this.entries);
-
-            this.entries.forEach(WindowListEntry::onDelete);
-            this.entries.clear();
-
-            this.entries.addAll(defaultValue.get().stream().map(this::getFromValue).toList());
-            this.entries.forEach(WindowListEntry::onAdd);
-
-            this.widgets.addAll(this.entries);
-        }).dimensions(0, 0, MinecraftClient.getInstance().textRenderer.getWidth(resetButtonKey) + 6,
-            20).build();
-        this.widgets.add(this.resetWidget);
     }
 
     public List<? extends Element> children() {
-        List<Element> elements = new ArrayList<>(this.widgets.stream()
-            .filter(x -> x instanceof Element)
-            .map(x -> (Element) x).toList());
+        List<Element> elements = this.header.getWidgets();
 
-        if (!this.expanded) {
-            elements.removeAll(this.entries);
+        if (this.expanded) {
+            elements.addAll(this.entries);
         }
 
         return elements;
     }
 
     public List<? extends Selectable> narratables() {
-        return this.widgets.stream()
+        return Stream.of(this.header.getWidgets(), this.entries)
             .filter(x -> x instanceof Selectable)
             .map(x -> (Selectable) x).toList();
     }
@@ -266,10 +200,15 @@ public class WindowList extends AbstractConfigListEntry<List<WindowEntry>> imple
             .reduce(24, Integer::sum);
     }
 
+    public Rectangle getEntryArea(int x, int y, int entryWidth, int entryHeight) {
+        this.header.updateLabelWidget(x, y, entryWidth);
+        return new Rectangle(this.getParent().left, y,
+            this.getParent().right - this.getParent().left, 20);
+    }
+
     public int getInitialReferenceOffset() {
         return 24;
     }
-
 
     public boolean isEdited() {
         if (super.isEdited() || this.entries.stream().anyMatch(WindowListEntry::isEdited)) {
@@ -363,28 +302,20 @@ public class WindowList extends AbstractConfigListEntry<List<WindowEntry>> imple
             errors.stream().findFirst();
     }
 
-    public boolean insertInFront() {
-        return this.insertInFront;
-    }
-
     public boolean isRequiresRestart() {
         return this.entries.stream().anyMatch(WindowListEntry::isRequiresRestart);
     }
 
-    public boolean isDeleteButtonEnabled() {
-        return this.deleteButtonEnabled;
-    }
-
-    public boolean isInsertButtonEnabled() {
-        return this.insertButtonEnabled;
+    public void setInsertInFront(boolean insertInFront) {
+        this.insertInFront = insertInFront;
     }
 
     public void setDeleteButtonEnabled(boolean deleteButtonEnabled) {
-        this.deleteButtonEnabled = deleteButtonEnabled;
+        this.header.setDeleteButtonEnabled(deleteButtonEnabled);
     }
 
     public void setInsertButtonEnabled(boolean insertButtonEnabled) {
-        this.insertButtonEnabled = insertButtonEnabled;
+        this.header.setInsertButtonEnabled(insertButtonEnabled);
     }
 
     public boolean isExpanded() {
@@ -394,6 +325,7 @@ public class WindowList extends AbstractConfigListEntry<List<WindowEntry>> imple
     public void setExpanded(boolean expanded) {
         this.expanded = expanded;
     }
+
 
     public @Nullable Text getAddTooltip() {
         return this.addTooltip;
@@ -431,41 +363,36 @@ public class WindowList extends AbstractConfigListEntry<List<WindowEntry>> imple
     }
 
     public Optional<Text[]> getTooltip(int mouseX, int mouseY) {
-        if (this.addTooltip != null && this.isInsideCreateNew(mouseX, mouseY)) {
-            return Optional.of(new Text[] {this.addTooltip});
-        }
-
-        if (this.removeTooltip != null &&
-            this.isInsideDelete(mouseX, mouseY)) {
-            return Optional.of(new Text[] {this.removeTooltip});
+        Optional<Text[]> headerTooltip = header.getTooltip(mouseX, mouseY);
+        if (headerTooltip.isPresent()) {
+            return headerTooltip;
         }
 
         return this.getTooltipSupplier() != null ? this.getTooltipSupplier().get() :
             Optional.empty();
     }
 
-    public Rectangle getEntryArea(int x, int y, int entryWidth, int entryHeight) {
-        this.labelWidget.rectangle.x = x - 15;
-        this.labelWidget.rectangle.y = y;
-        this.labelWidget.rectangle.width = entryWidth + 15;
-        this.labelWidget.rectangle.height = 24;
-        return new Rectangle(this.getParent().left, y,
-            this.getParent().right - this.getParent().left, 20);
+    public void addEntry(WindowListEntry entry) {
+        if (this.insertInFront) {
+            this.entries.add(0, entry);
+        } else {
+            this.entries.add(entry);
+        }
+
+        entry.onAdd();
     }
 
-    protected boolean isInsideCreateNew(double mouseX, double mouseY) {
-        return this.isInsertButtonEnabled() &&
-            mouseX >= (double) (this.labelWidget.rectangle.x + 12) &&
-            mouseY >= (double) (this.labelWidget.rectangle.y + 3) &&
-            mouseX <= (double) (this.labelWidget.rectangle.x + 12 + 11) &&
-            mouseY <= (double) (this.labelWidget.rectangle.y + 3 + 11);
+    public void createNewEntry() {
+        WindowListEntry entry = this.getCreateNewInstance().apply(this);
+        this.addEntry(entry);
     }
 
-    protected boolean isInsideDelete(double mouseX, double mouseY) {
-        return this.isDeleteButtonEnabled() && mouseX >=
-            (double) (this.labelWidget.rectangle.x + (this.isInsertButtonEnabled() ? 25 : 12)) &&
-            mouseY >= (double) (this.labelWidget.rectangle.y + 3) && mouseX <=
-            (double) (this.labelWidget.rectangle.x + (this.isInsertButtonEnabled() ? 25 : 12) +
-                11) && mouseY <= (double) (this.labelWidget.rectangle.y + 3 + 11);
+    public void removeEntry(WindowListEntry focused) {
+        focused.onDelete();
+        this.entries.remove(focused);
+    }
+
+    public Function<WindowEntry, Optional<Text>> getEntryErrorSupplier() {
+        return entryErrorSupplier;
     }
 }

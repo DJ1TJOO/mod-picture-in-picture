@@ -29,22 +29,22 @@ public class WindowListEntry extends AbstractParentElement
             .getString();
 
     private final @Nullable WindowEntry startEntry;
-    protected final WindowList listListEntry;
+    private final WindowList windowList;
     private Supplier<Optional<Text>> errorSupplier;
 
-    protected TextFieldWidget nameWidget;
-    protected TexturedToggleButtonWidget draggableWidget;
+    private TextFieldWidget nameWidget;
+    private TexturedToggleButtonWidget draggableWidget;
     private boolean isSelected;
     private boolean isHovered;
 
     public WindowListEntry(@Nullable WindowEntry value,
-                           WindowList listListEntry) {
+                           WindowList windowList) {
         this.startEntry = value;
-        this.listListEntry = listListEntry;
+        this.windowList = windowList;
 
         this.createWidgets(this.substituteDefault(value));
 
-        this.setErrorSupplier(() -> Optional.ofNullable(listListEntry.entryErrorSupplier)
+        this.setErrorSupplier(() -> Optional.ofNullable(windowList.getEntryErrorSupplier())
             .flatMap((entryErrorFn) -> entryErrorFn.apply(this.getValue())));
     }
 
@@ -56,7 +56,7 @@ public class WindowListEntry extends AbstractParentElement
             entryWidth - WIDGET_SPACING - this.draggableWidget.getWidth() - RIGHT_PADDING);
         this.nameWidget.setX(currentX);
         this.nameWidget.setY(y + 1);
-        this.nameWidget.setEditable(this.listListEntry.isEditable());
+        this.nameWidget.setEditable(this.windowList.isEditable());
         this.nameWidget.render(matrices, mouseX, mouseY, delta);
 
         this.isHovered = this.nameWidget.isMouseOver(mouseX, mouseY);
@@ -68,7 +68,7 @@ public class WindowListEntry extends AbstractParentElement
         currentX += this.nameWidget.getWidth() + WIDGET_SPACING;
         this.draggableWidget.setX(currentX);
         this.draggableWidget.setY(y);
-        this.draggableWidget.active = this.listListEntry.isEditable();
+        this.draggableWidget.active = this.windowList.isEditable();
         this.draggableWidget.render(matrices, mouseX, mouseY, delta);
 
     }
@@ -119,7 +119,7 @@ public class WindowListEntry extends AbstractParentElement
             startEntry != null ? startEntry.getHandle() : 0);
     }
 
-    protected WindowEntry substituteDefault(@Nullable WindowEntry value) {
+    private WindowEntry substituteDefault(@Nullable WindowEntry value) {
         return value == null ? new WindowEntry("", false) : value;
     }
 
@@ -172,11 +172,9 @@ public class WindowListEntry extends AbstractParentElement
         }
 
 
-        List<WindowEntry> entriesWithName = this.listListEntry.getValue().stream()
+        List<WindowEntry> entriesWithName = this.windowList.getValue().stream()
             .filter(x -> x.getName().equals(value.getName())).toList();
-
-        if ((this.listListEntry.entries.stream().noneMatch(x -> x.nameWidget.isActive()) ||
-            this.nameWidget.isActive()) && entriesWithName.size() > 1) {
+        if (entriesWithName.size() > 1) {
             return Optional.of(
                 Text.translatable("text.picture-in-picture.window.name_taken"));
         }
