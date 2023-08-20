@@ -28,7 +28,7 @@
   <summary>Table of Contents</summary>
   <ol>
     <li>
-      <a href="#about-the-project">About Picture In Picture</a>
+      <a href="#about-picture-in-picture">About Picture In Picture</a>
     </li>
     <li><a href="#supports">Support</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
