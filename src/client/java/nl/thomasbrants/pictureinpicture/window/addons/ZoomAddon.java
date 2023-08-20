@@ -15,6 +15,8 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class ZoomAddon extends WindowAddon
     implements WindowInputAddon, WindowRenderAddon {
+    private static final float MAX_ZOOM = 0.1f;
+    private static final float ZOOM_SPEED = 0.1f;
     private final Vector2d draggingStart, zoomOffsetDestination, zoomOffset;
     private boolean dragging = false;
 
@@ -35,10 +37,10 @@ public class ZoomAddon extends WindowAddon
 
     @Override
     public void onScroll(double xOffset, double yOffset) {
-        zoomDestination += yOffset > 0 ? 0.1f : -0.1f;
+        zoomDestination += (1 + currentZoom) * (yOffset > 0 ? ZOOM_SPEED : -ZOOM_SPEED);
 
-        if (zoomDestination > 2f) {
-            zoomDestination = 2f;
+        if (zoomDestination > window.getFrameBufferWidth() * MAX_ZOOM) {
+            zoomDestination = window.getFrameBufferWidth() * MAX_ZOOM;
         } else if (zoomDestination < 0) {
             zoomDestination = 0f;
         }
@@ -89,11 +91,18 @@ public class ZoomAddon extends WindowAddon
 
         // Zoom
         double delta = zoomDestination - currentZoom;
-        currentZoom += delta * 0.2;
+        double zoomDiff = delta * 0.2;
+        if (zoomDiff > 0) {
+            zoomOffset.add(zoomOffset.x / (1 + currentZoom) * zoomDiff,
+                zoomOffset.y / (1 + currentZoom) * zoomDiff);
+            zoomOffsetDestination.add(zoomOffset.x / (1 + currentZoom) * zoomDiff,
+                zoomOffset.y / (1 + currentZoom) * zoomDiff);
+        }
+        currentZoom += zoomDiff;
 
         zoomOffsetDestination.set(
             MathUtils.clamp(zoomOffsetDestination, -1 * currentZoom, 1 * currentZoom));
-
+        
         // Apply
         glTranslated(zoomOffset.x, zoomOffset.y, 0);
         glScaled(1 + currentZoom, 1 + currentZoom, 1);
