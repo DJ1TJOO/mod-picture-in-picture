@@ -22,4 +22,12 @@ public abstract class WindowAddon {
     public String getId() {
         return id;
     }
+
+    public boolean add() {
+        return true;
+    }
+
+    public boolean remove() {
+        return true;
+    }
 }

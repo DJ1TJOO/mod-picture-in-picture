@@ -602,7 +602,10 @@ public class PictureInPictureWindow {
                 ((WindowAttributeAddon) addon).onWindowInitialized(windowWidth, windowHeight);
             }
 
-            addons.add(addon);
+            if (addon.add()) {
+                addons.add(addon);
+            }
+            
             return true;
         } catch (Exception e) {
             PIP_LOGGER.warn("Error while adding addon: " + e);
@@ -611,7 +614,7 @@ public class PictureInPictureWindow {
     }
 
     public void removeAddon(String id) {
-        addons.removeIf(x -> x.getId().equals(id));
+        addons.removeIf(x -> x.getId().equals(id) && x.remove());
     }
 
     public <T extends WindowAddon> boolean toggleAddon(Class<T> addonClass) {
