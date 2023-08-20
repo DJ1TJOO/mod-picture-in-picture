@@ -297,9 +297,7 @@ public class WindowList extends AbstractConfigListEntry<List<WindowEntry>> imple
             .filter(Optional::isPresent)
             .map(Optional::get).toList();
 
-        // TODO: maybe change this, to show first or all errors?
-        return errors.size() > 1 ? Optional.of(Text.translatable("text.cloth-config.multi_error")) :
-            errors.stream().findFirst();
+        return errors.stream().findFirst();
     }
 
     public boolean isRequiresRestart() {
