@@ -4,17 +4,17 @@
 
 package nl.thomasbrants.pictureinpicture.window.addons;
 
-import nl.thomasbrants.pictureinpicture.window.PictureInPictureWindow;
+import nl.thomasbrants.pictureinpicture.window.Window;
 
 public abstract class WindowAddon {
-    protected final PictureInPictureWindow window;
+    protected final Window window;
     protected final String id;
 
-    public WindowAddon(PictureInPictureWindow window) {
+    public WindowAddon(Window window) {
         this("no-id", window);
     }
 
-    protected WindowAddon(String id, PictureInPictureWindow window) {
+    protected WindowAddon(String id, Window window) {
         this.id = id;
         this.window = window;
     }

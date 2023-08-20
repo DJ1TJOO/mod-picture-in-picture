@@ -5,7 +5,7 @@
 package nl.thomasbrants.pictureinpicture.mixin.client;
 
 import net.minecraft.client.util.Window;
-import nl.thomasbrants.pictureinpicture.PictureInPictureModClient;
+import nl.thomasbrants.pictureinpicture.window.WindowManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,16 +15,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class WindowMixin {
     @Inject(at = @At("RETURN"), method = "onFramebufferSizeChanged")
     private void onFramebufferSizeChanged(CallbackInfo ci) {
-        PictureInPictureModClient.getInstance().onResolutionChanged();
+        WindowManager.onResolutionChanged();
     }
 
     @Inject(at = @At("RETURN"), method = "updateFramebufferSize")
     private void onUpdateFramebufferSize(CallbackInfo ci) {
-        PictureInPictureModClient.getInstance().onResolutionChanged();
+        WindowManager.onResolutionChanged();
     }
 
     @Inject(at = @At("RETURN"), method = "swapBuffers")
     private void swapBuffers(CallbackInfo ci) {
-        PictureInPictureModClient.getInstance().renderWindows();
+        WindowManager.renderWindows();
     }
 }

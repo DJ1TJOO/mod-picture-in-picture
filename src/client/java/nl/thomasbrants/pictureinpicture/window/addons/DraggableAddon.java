@@ -4,7 +4,7 @@
 
 package nl.thomasbrants.pictureinpicture.window.addons;
 
-import nl.thomasbrants.pictureinpicture.window.PictureInPictureWindow;
+import nl.thomasbrants.pictureinpicture.window.Window;
 import org.joml.Vector2d;
 import org.joml.Vector2i;
 
@@ -18,7 +18,7 @@ public class DraggableAddon extends WindowAddon
 
     private final Vector2d draggingStart, windowDestination;
 
-    public DraggableAddon(PictureInPictureWindow window) {
+    public DraggableAddon(Window window) {
         super("draggable", window);
 
         draggingStart = new Vector2d();

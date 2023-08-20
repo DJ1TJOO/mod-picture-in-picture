@@ -5,7 +5,7 @@
 package nl.thomasbrants.pictureinpicture.window.addons;
 
 import nl.thomasbrants.pictureinpicture.MathUtils;
-import nl.thomasbrants.pictureinpicture.window.PictureInPictureWindow;
+import nl.thomasbrants.pictureinpicture.window.Window;
 import org.joml.Vector2d;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -25,7 +25,7 @@ public class ZoomAddon extends WindowAddon
 
     private final long draggingCursor;
 
-    public ZoomAddon(PictureInPictureWindow window) {
+    public ZoomAddon(Window window) {
         super("zoom", window);
 
         draggingStart = new Vector2d();
@@ -102,7 +102,7 @@ public class ZoomAddon extends WindowAddon
 
         zoomOffsetDestination.set(
             MathUtils.clamp(zoomOffsetDestination, -1 * currentZoom, 1 * currentZoom));
-        
+
         // Apply
         glTranslated(zoomOffset.x, zoomOffset.y, 0);
         glScaled(1 + currentZoom, 1 + currentZoom, 1);

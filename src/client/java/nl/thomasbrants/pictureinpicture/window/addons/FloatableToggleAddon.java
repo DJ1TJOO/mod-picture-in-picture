@@ -5,11 +5,11 @@
 package nl.thomasbrants.pictureinpicture.window.addons;
 
 import nl.thomasbrants.pictureinpicture.PictureInPictureModClient;
-import nl.thomasbrants.pictureinpicture.window.PictureInPictureWindow;
+import nl.thomasbrants.pictureinpicture.window.Window;
 import org.joml.Vector2d;
 
 public class FloatableToggleAddon extends WindowAddon implements WindowInputAddon {
-    public FloatableToggleAddon(PictureInPictureWindow window) {
+    public FloatableToggleAddon(Window window) {
         super("floatable", window);
     }
 

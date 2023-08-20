@@ -5,10 +5,10 @@
 package nl.thomasbrants.pictureinpicture.window.addons;
 
 import nl.thomasbrants.pictureinpicture.PictureInPictureModClient;
-import nl.thomasbrants.pictureinpicture.window.PictureInPictureWindow;
+import nl.thomasbrants.pictureinpicture.window.Window;
 
 public class DecoratedToggleAddon extends WindowAddon implements WindowAttributeAddon {
-    public DecoratedToggleAddon(PictureInPictureWindow window) {
+    public DecoratedToggleAddon(Window window) {
         super("decorated", window);
     }
 

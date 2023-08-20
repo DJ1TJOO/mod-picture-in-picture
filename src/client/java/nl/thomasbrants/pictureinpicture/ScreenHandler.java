@@ -14,6 +14,7 @@ import net.minecraft.client.gui.widget.TexturedButtonWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import nl.thomasbrants.pictureinpicture.config.ModConfig;
+import nl.thomasbrants.pictureinpicture.window.WindowManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,11 +29,10 @@ public class ScreenHandler {
                                        int windowHeight) {
 
         // Create first windows when title screen is loaded for the first time
-        if (PictureInPictureModClient.getInstance().isReadyToCreateWindows()) {
-            PictureInPictureModClient.getInstance().setReadyToCreateWindows(false);
-            PictureInPictureModClient.getInstance()
-                .updateWindows(new ArrayList<>(), PictureInPictureModClient.getConfig().windows);
-            PictureInPictureModClient.getInstance().onCreatedWindows();
+        if (WindowManager.isReadyToCreateWindows()) {
+            WindowManager.updateWindows(new ArrayList<>(),
+                PictureInPictureModClient.getConfig().windows);
+            WindowManager.onCreatedWindows();
         }
 
         if (screen instanceof TitleScreen) {

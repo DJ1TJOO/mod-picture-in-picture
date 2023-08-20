@@ -11,12 +11,10 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.Window;
 import net.minecraft.resource.InputSupplier;
-import nl.thomasbrants.pictureinpicture.window.addons.WindowAddon;
-import nl.thomasbrants.pictureinpicture.window.addons.WindowAttributeAddon;
-import nl.thomasbrants.pictureinpicture.window.addons.WindowInputAddon;
-import nl.thomasbrants.pictureinpicture.window.addons.WindowRenderAddon;
+import nl.thomasbrants.pictureinpicture.config.ModConfig;
+import nl.thomasbrants.pictureinpicture.config.WindowEntry;
+import nl.thomasbrants.pictureinpicture.window.addons.*;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2d;
 import org.joml.Vector2i;
@@ -37,11 +35,12 @@ import java.util.Comparator;
 import java.util.List;
 
 import static nl.thomasbrants.pictureinpicture.PictureInPictureMod.PIP_LOGGER;
+import static nl.thomasbrants.pictureinpicture.PictureInPictureModClient.getConfig;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
-public class PictureInPictureWindow {
+public class Window {
     private static final List<String> RENDER_ORDER =
         new ArrayList<>(List.of("draggable", "zoom", "force-render-aspect-ratio"));
 
@@ -61,8 +60,29 @@ public class PictureInPictureWindow {
     private boolean isDragging = false;
     private final Vector2d mouseDownPosition, lastMousePosition;
 
-    public PictureInPictureWindow(boolean startFocused, boolean startDecorated,
-                                  boolean startFloated, String name) {
+    public static Window fromEntry(WindowEntry entry) {
+        ModConfig config = getConfig();
+        Window window =
+            new Window(config.autoFocus, config.openDecorated, config.openFloated, entry.getName());
+        window.updateFromEntry(entry);
+        return window;
+    }
+
+    public void updateFromEntry(WindowEntry entry) {
+        if (this.handle != NULL) {
+            this.setName(entry.getName());
+        }
+
+        this.toggleAddon(DraggableAddon.class, entry.hasDraggable());
+        this.toggleAddon(FloatableToggleAddon.class, entry.hasFloatableToggle());
+        this.toggleAddon(DecoratedToggleAddon.class, entry.hasDecoratedToggle());
+        this.toggleAddon(ForceRenderAspectRatioAddon.class, entry.hasForceRenderAspectRatio());
+        this.toggleAddon(ForceWindowAspectRatioAddon.class, entry.hasForceWindowAspectRatio());
+        this.toggleAddon(ZoomAddon.class, entry.hasZoom());
+    }
+
+    public Window(boolean startFocused, boolean startDecorated,
+                  boolean startFloated, String name) {
         this.startFocused = startFocused;
         this.startDecorated = startDecorated;
         this.startFloated = startFloated;
@@ -94,7 +114,8 @@ public class PictureInPictureWindow {
         glfwWindowHint(GLFW_DECORATED, booleanToGLFW(startDecorated));
 
         // Create window
-        Window minecraftWindow = MinecraftClient.getInstance().getWindow();
+        net.minecraft.client.util.Window minecraftWindow =
+            MinecraftClient.getInstance().getWindow();
         double windowWidth = minecraftWindow.getWidth();
         double windowHeight = minecraftWindow.getHeight();
 
@@ -347,7 +368,8 @@ public class PictureInPictureWindow {
     }
 
     public void onResolutionChanged() {
-        Window minecraftWindow = MinecraftClient.getInstance().getWindow();
+        net.minecraft.client.util.Window minecraftWindow =
+            MinecraftClient.getInstance().getWindow();
         double windowWidth = minecraftWindow.getFramebufferWidth();
         double windowHeight = minecraftWindow.getFramebufferHeight();
 
@@ -588,7 +610,7 @@ public class PictureInPictureWindow {
     public <T extends WindowAddon> boolean registerAddon(Class<T> addonClass) {
         try {
             Class[] parameterType = new Class[1];
-            parameterType[0] = PictureInPictureWindow.class;
+            parameterType[0] = Window.class;
 
             WindowAddon addon = addonClass.getDeclaredConstructor(parameterType).newInstance(this);
             if (addons.stream().anyMatch(x -> x.getId().equals(addon.getId()))) {
@@ -596,7 +618,8 @@ public class PictureInPictureWindow {
             }
 
             if (initialized && addon instanceof WindowAttributeAddon) {
-                Window minecraftWindow = MinecraftClient.getInstance().getWindow();
+                net.minecraft.client.util.Window minecraftWindow =
+                    MinecraftClient.getInstance().getWindow();
                 double windowWidth = minecraftWindow.getFramebufferWidth();
                 double windowHeight = minecraftWindow.getFramebufferHeight();
                 ((WindowAttributeAddon) addon).onWindowInitialized(windowWidth, windowHeight);
@@ -605,7 +628,7 @@ public class PictureInPictureWindow {
             if (addon.add()) {
                 addons.add(addon);
             }
-            
+
             return true;
         } catch (Exception e) {
             PIP_LOGGER.warn("Error while adding addon: " + e);

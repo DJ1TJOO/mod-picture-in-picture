@@ -6,14 +6,14 @@ package nl.thomasbrants.pictureinpicture.window.addons;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
-import nl.thomasbrants.pictureinpicture.window.PictureInPictureWindow;
+import nl.thomasbrants.pictureinpicture.window.Window;
 
 import static org.lwjgl.opengl.GL11.*;
 
 public class ForceRenderAspectRatioAddon extends WindowAddon implements WindowRenderAddon {
 
     public ForceRenderAspectRatioAddon(
-        PictureInPictureWindow window) {
+        Window window) {
         super("force-render-aspect-ratio", window);
     }
 

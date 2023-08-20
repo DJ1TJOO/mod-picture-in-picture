@@ -4,14 +4,14 @@
 
 package nl.thomasbrants.pictureinpicture.window.addons;
 
-import nl.thomasbrants.pictureinpicture.window.PictureInPictureWindow;
+import nl.thomasbrants.pictureinpicture.window.Window;
 
 import static org.lwjgl.glfw.GLFW.GLFW_DONT_CARE;
 import static org.lwjgl.glfw.GLFW.glfwSetWindowAspectRatio;
 
 public class ForceWindowAspectRatioAddon extends WindowAddon implements WindowAttributeAddon {
 
-    public ForceWindowAspectRatioAddon(PictureInPictureWindow window) {
+    public ForceWindowAspectRatioAddon(Window window) {
         super("force-window-aspect-ratio", window);
     }
 
