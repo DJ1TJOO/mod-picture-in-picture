@@ -33,15 +33,20 @@ public class ModConfig implements ConfigData {
         ModConfig config = new ModConfig();
 
         config.autoFocus = object.getBoolean("autoFocus", config.autoFocus);
-        config.openDecorated = object.getBoolean("autoFocus", config.openDecorated);
-        config.openFloated = object.getBoolean("autoFocus", config.openFloated);
+        config.openDecorated = object.getBoolean("openDecorated", config.openDecorated);
+        config.openFloated = object.getBoolean("openFloated", config.openFloated);
 
         Object windows = object.get(List.class, "windows");
         config.windows = new ArrayList<>();
         if (windows != null) {
             for (JsonObject window : (List<JsonObject>) windows) {
                 WindowEntry entry = new WindowEntry(window.get(String.class, "name"),
-                    window.getBoolean("draggable", false));
+                    window.getBoolean("hasDraggable", false),
+                    window.getBoolean("hasFloatableToggle", false),
+                    window.getBoolean("hasDecoratedToggle", false),
+                    window.getBoolean("hasForceRenderAspectRatio", false),
+                    window.getBoolean("hasForceWindowAspectRatio", false),
+                    window.getBoolean("hasZoom", false));
                 config.windows.add(entry);
             }
         }

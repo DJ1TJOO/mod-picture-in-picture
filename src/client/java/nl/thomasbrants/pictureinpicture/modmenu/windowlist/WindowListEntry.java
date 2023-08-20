@@ -5,6 +5,7 @@ import net.minecraft.client.gui.AbstractParentElement;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
@@ -14,7 +15,9 @@ import nl.thomasbrants.pictureinpicture.config.WindowEntry;
 import nl.thomasbrants.pictureinpicture.widgets.TexturedToggleButtonWidget;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -22,6 +25,16 @@ public class WindowListEntry extends AbstractParentElement
     implements Selectable {
     private static final Identifier DRAGGABLE_BUTTON_ICON =
         new Identifier(PictureInPictureMod.MOD_ID, "textures/gui/draggable.png");
+    private static final Identifier FLOATABLE_BUTTON_ICON =
+        new Identifier(PictureInPictureMod.MOD_ID, "textures/gui/floatable.png");
+    private static final Identifier DECORATED_TOGGLE_BUTTON_ICON =
+        new Identifier(PictureInPictureMod.MOD_ID, "textures/gui/decorated_toggle.png");
+    private static final Identifier FORCE_RENDER_ASPECT_RATIO_ICON =
+        new Identifier(PictureInPictureMod.MOD_ID, "textures/gui/force_render_aspect_ratio.png");
+    private static final Identifier FORCE_WINDOW_ASPECT_RATIO_ICON =
+        new Identifier(PictureInPictureMod.MOD_ID, "textures/gui/force_window_aspect_ratio.png");
+    private static final Identifier ZOOM_BUTTON_ICON =
+        new Identifier(PictureInPictureMod.MOD_ID, "textures/gui/zoom.png");
     private static final int WIDGET_SPACING = 4;
     private static final int RIGHT_PADDING = 36;
     private static final String PLACEHOLDER =
@@ -34,6 +47,11 @@ public class WindowListEntry extends AbstractParentElement
 
     private TextFieldWidget nameWidget;
     private TexturedToggleButtonWidget draggableWidget;
+    private TexturedToggleButtonWidget floatableToggleWidget;
+    private TexturedToggleButtonWidget decoratedToggleWidget;
+    private TexturedToggleButtonWidget forceRenderAspectRatioWidget;
+    private TexturedToggleButtonWidget forceWindowAspectRatioWidget;
+    private TexturedToggleButtonWidget zoomWidget;
     private boolean isSelected;
     private boolean isHovered;
 
@@ -51,9 +69,17 @@ public class WindowListEntry extends AbstractParentElement
     public void render(MatrixStack matrices, int index, int y, int x, int entryWidth,
                        int entryHeight, int mouseX, int mouseY, boolean isSelected,
                        float delta) {
+        List<TexturedToggleButtonWidget> buttons = new ArrayList<>(
+            List.of(draggableWidget, floatableToggleWidget, decoratedToggleWidget,
+                forceRenderAspectRatioWidget, forceWindowAspectRatioWidget, zoomWidget));
+
+        int buttonsWidth = buttons.stream().map(ClickableWidget::getWidth)
+            .reduce(0, (prev, curr) -> prev + curr + WIDGET_SPACING);
+
         int currentX = x;
+
         this.nameWidget.setWidth(
-            entryWidth - WIDGET_SPACING - this.draggableWidget.getWidth() - RIGHT_PADDING);
+            entryWidth - buttonsWidth - RIGHT_PADDING);
         this.nameWidget.setX(currentX);
         this.nameWidget.setY(y + 1);
         this.nameWidget.setEditable(this.windowList.isEditable());
@@ -65,12 +91,21 @@ public class WindowListEntry extends AbstractParentElement
                 this.getConfigError().isPresent() ? -43691 : -2039584);
         }
 
-        currentX += this.nameWidget.getWidth() + WIDGET_SPACING;
-        this.draggableWidget.setX(currentX);
-        this.draggableWidget.setY(y);
-        this.draggableWidget.active = this.windowList.isEditable();
-        this.draggableWidget.render(matrices, mouseX, mouseY, delta);
+        ListIterator<TexturedToggleButtonWidget> buttonsIterator = buttons.listIterator();
+        while (buttonsIterator.hasNext()) {
+            ClickableWidget
+                previousWidget =
+                buttonsIterator.hasPrevious() ? buttons.get(buttonsIterator.previousIndex()) :
+                    this.nameWidget;
 
+            TexturedToggleButtonWidget button = buttonsIterator.next();
+
+            currentX += previousWidget.getWidth() + WIDGET_SPACING;
+            button.setX(currentX);
+            button.setY(y);
+            button.active = this.windowList.isEditable();
+            button.render(matrices, mouseX, mouseY, delta);
+        }
     }
 
     private void createWidgets(WindowEntry finalValue) {
@@ -90,7 +125,31 @@ public class WindowListEntry extends AbstractParentElement
 
         this.draggableWidget =
             new TexturedToggleButtonWidget(0, 0, 20, 20, 0, 0, 20, 20, DRAGGABLE_BUTTON_ICON,
-                40, 40, finalValue.isDraggable(), (TexturedToggleButtonWidget button) -> {
+                40, 40, finalValue.hasDraggable(), (TexturedToggleButtonWidget button) -> {
+            });
+        this.floatableToggleWidget =
+            new TexturedToggleButtonWidget(0, 0, 20, 20, 0, 0, 20, 20, FLOATABLE_BUTTON_ICON,
+                40, 40, finalValue.hasFloatableToggle(), (TexturedToggleButtonWidget button) -> {
+            });
+        this.decoratedToggleWidget =
+            new TexturedToggleButtonWidget(0, 0, 20, 20, 0, 0, 20, 20, DECORATED_TOGGLE_BUTTON_ICON,
+                40, 40, finalValue.hasDecoratedToggle(), (TexturedToggleButtonWidget button) -> {
+            });
+        this.forceRenderAspectRatioWidget =
+            new TexturedToggleButtonWidget(0, 0, 20, 20, 0, 0, 20, 20,
+                FORCE_RENDER_ASPECT_RATIO_ICON,
+                40, 40, finalValue.hasForceRenderAspectRatio(),
+                (TexturedToggleButtonWidget button) -> {
+                });
+        this.forceWindowAspectRatioWidget =
+            new TexturedToggleButtonWidget(0, 0, 20, 20, 0, 0, 20, 20,
+                FORCE_WINDOW_ASPECT_RATIO_ICON,
+                40, 40, finalValue.hasForceWindowAspectRatio(),
+                (TexturedToggleButtonWidget button) -> {
+                });
+        this.zoomWidget =
+            new TexturedToggleButtonWidget(0, 0, 20, 20, 0, 0, 20, 20, ZOOM_BUTTON_ICON,
+                40, 40, finalValue.hasZoom(), (TexturedToggleButtonWidget button) -> {
             });
     }
 
@@ -102,10 +161,19 @@ public class WindowListEntry extends AbstractParentElement
     public void appendNarrations(NarrationMessageBuilder narrationElementOutput) {
         this.nameWidget.appendNarrations(narrationElementOutput);
         this.draggableWidget.appendNarrations(narrationElementOutput);
+        this.floatableToggleWidget.appendNarrations(narrationElementOutput);
+        this.decoratedToggleWidget.appendNarrations(narrationElementOutput);
+        this.forceRenderAspectRatioWidget.appendNarrations(narrationElementOutput);
+        this.forceWindowAspectRatioWidget.appendNarrations(narrationElementOutput);
+        this.zoomWidget.appendNarrations(narrationElementOutput);
     }
 
     public List<? extends Element> children() {
-        return List.of(this.nameWidget, this.draggableWidget);
+        return List.of(this.nameWidget, this.draggableWidget, this.floatableToggleWidget,
+            this.decoratedToggleWidget,
+            this.forceRenderAspectRatioWidget,
+            this.forceWindowAspectRatioWidget,
+            this.zoomWidget);
     }
 
     public SelectionType getType() {
@@ -114,12 +182,18 @@ public class WindowListEntry extends AbstractParentElement
     }
 
     public WindowEntry getValue() {
-        return new WindowEntry(this.nameWidget.getText(), this.draggableWidget.isToggled(),
-            startEntry != null ? startEntry.getHandle() : 0);
+        return new WindowEntry(this.nameWidget.getText(),
+            startEntry != null ? startEntry.getHandle() : 0, this.draggableWidget.isToggled(),
+            this.floatableToggleWidget.isToggled(),
+            this.decoratedToggleWidget.isToggled(),
+            this.forceRenderAspectRatioWidget.isToggled(),
+            this.forceWindowAspectRatioWidget.isToggled(),
+            this.zoomWidget.isToggled());
     }
 
     private WindowEntry substituteDefault(@Nullable WindowEntry value) {
-        return value == null ? new WindowEntry("", false) : value;
+        return value == null ? new WindowEntry("", false, false, false, false, false, false) :
+            value;
     }
 
     public void updateSelected(boolean isSelected) {

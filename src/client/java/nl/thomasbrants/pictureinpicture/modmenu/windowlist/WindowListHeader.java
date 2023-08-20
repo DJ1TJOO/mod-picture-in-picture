@@ -11,6 +11,7 @@ import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
@@ -87,6 +88,13 @@ public class WindowListHeader extends DrawableHelper implements Element {
             this.rectangle.contains(mouseX, mouseY) &&
                 !this.resetWidget.isMouseOver(mouseX, mouseY) && !insideDelete &&
                 !insideCreateNew ? -1638890 : this.list.getPreferredTextColor());
+
+        // Addon label
+        MinecraftClient.getInstance().textRenderer.drawWithShadow(matrices,
+            Text.literal("Addons").copy().formatted(Formatting.GRAY),
+            (float) (x + entryWidth - this.resetWidget.getWidth() -
+                MinecraftClient.getInstance().textRenderer.getWidth("Addons")) - 4,
+            (float) (y + 6), this.list.getPreferredTextColor());
 
         // Reset
         this.resetWidget.setX(x + entryWidth - this.resetWidget.getWidth());

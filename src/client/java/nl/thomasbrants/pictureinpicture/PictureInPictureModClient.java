@@ -107,8 +107,14 @@ public class PictureInPictureModClient implements ClientModInitializer {
             }
 
             window.setName(entry.getName());
-            window.toggleAddon(DraggableAddon.class, entry.isDraggable());
-            //        TODO: add all addons
+            window.toggleAddon(DraggableAddon.class, entry.hasDraggable());
+            window.toggleAddon(FloatableToggleAddon.class, entry.hasFloatableToggle());
+            window.toggleAddon(DecoratedToggleAddon.class, entry.hasDecoratedToggle());
+            window.toggleAddon(ForceRenderAspectRatioAddon.class,
+                entry.hasForceRenderAspectRatio());
+            window.toggleAddon(ForceWindowAspectRatioAddon.class,
+                entry.hasForceWindowAspectRatio());
+            window.toggleAddon(ZoomAddon.class, entry.hasZoom());
         }
 
         // Open new newWindows
@@ -126,23 +132,21 @@ public class PictureInPictureModClient implements ClientModInitializer {
     }
 
     public void createPictureInPictureWindow(WindowEntry entry) {
-        PictureInPictureWindow pictureInPictureWindow =
+        PictureInPictureWindow window =
             new PictureInPictureWindow(getConfig().autoFocus, getConfig().openDecorated,
                 getConfig().openFloated, entry.getName());
 
-        pictureInPictureWindow.toggleAddon(DraggableAddon.class, entry.isDraggable());
+        //        TODO: create hide addon
+        window.toggleAddon(DraggableAddon.class, entry.hasDraggable());
+        window.toggleAddon(FloatableToggleAddon.class, entry.hasFloatableToggle());
+        window.toggleAddon(DecoratedToggleAddon.class, entry.hasDecoratedToggle());
+        window.toggleAddon(ForceRenderAspectRatioAddon.class, entry.hasForceRenderAspectRatio());
+        window.toggleAddon(ForceWindowAspectRatioAddon.class, entry.hasForceWindowAspectRatio());
+        window.toggleAddon(ZoomAddon.class, entry.hasZoom());
 
-//        TODO: create hide addon
-//        TODO: update from settings
-        pictureInPictureWindow.registerAddon(FloatableToggleAddon.class);
-        pictureInPictureWindow.registerAddon(DecoratedToggleAddon.class);
-        pictureInPictureWindow.registerAddon(ForceRenderAspectRatioAddon.class);
-        pictureInPictureWindow.registerAddon(ForceWindowAspectRatioAddon.class);
-        pictureInPictureWindow.registerAddon(ZoomAddon.class);
-
-        pictureInPictureWindow.create();
-        entry.setHandle(pictureInPictureWindow.getHandle());
-        pictureInPictureWindows.add(pictureInPictureWindow);
+        window.create();
+        entry.setHandle(window.getHandle());
+        pictureInPictureWindows.add(window);
     }
 
     private @Nullable PictureInPictureWindow getWindow(long handle) {
