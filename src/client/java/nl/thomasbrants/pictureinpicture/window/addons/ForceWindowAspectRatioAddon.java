@@ -6,6 +6,7 @@ package nl.thomasbrants.pictureinpicture.window.addons;
 
 import nl.thomasbrants.pictureinpicture.window.PictureInPictureWindow;
 
+import static org.lwjgl.glfw.GLFW.GLFW_DONT_CARE;
 import static org.lwjgl.glfw.GLFW.glfwSetWindowAspectRatio;
 
 public class ForceWindowAspectRatioAddon extends WindowAddon implements WindowAttributeAddon {
@@ -16,14 +17,18 @@ public class ForceWindowAspectRatioAddon extends WindowAddon implements WindowAt
 
     @Override
     public void onWindowInitialized(double width, double height) {
-        System.out.println("init: " + width + " " + height);
         glfwSetWindowAspectRatio(window.getHandle(), (int) width, (int) height);
     }
 
     @Override
     public void onResolutionChanged(double width, double height) {
-        System.out.println("res: " + width + " " + height);
         glfwSetWindowAspectRatio(window.getHandle(), (int) width, (int) height);
+    }
+
+    @Override
+    public boolean remove() {
+        glfwSetWindowAspectRatio(window.getHandle(), GLFW_DONT_CARE, GLFW_DONT_CARE);
+        return super.remove();
     }
 
     @Override

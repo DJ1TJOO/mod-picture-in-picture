@@ -4,6 +4,7 @@
 
 package nl.thomasbrants.pictureinpicture.window.addons;
 
+import nl.thomasbrants.pictureinpicture.PictureInPictureModClient;
 import nl.thomasbrants.pictureinpicture.window.PictureInPictureWindow;
 import org.joml.Vector2d;
 
@@ -15,6 +16,12 @@ public class FloatableToggleAddon extends WindowAddon implements WindowInputAddo
     @Override
     public void onDoubleClick(Vector2d mousePosition, int button, int mods) {
         window.toggleFloating();
+    }
+
+    @Override
+    public boolean remove() {
+        window.setFloating(PictureInPictureModClient.getConfig().openFloated);
+        return super.remove();
     }
 
     @Override

@@ -4,6 +4,7 @@
 
 package nl.thomasbrants.pictureinpicture.window.addons;
 
+import nl.thomasbrants.pictureinpicture.PictureInPictureModClient;
 import nl.thomasbrants.pictureinpicture.window.PictureInPictureWindow;
 
 public class DecoratedToggleAddon extends WindowAddon implements WindowAttributeAddon {
@@ -22,6 +23,12 @@ public class DecoratedToggleAddon extends WindowAddon implements WindowAttribute
     }
 
     @Override
+    public boolean remove() {
+        window.setDecorated(PictureInPictureModClient.getConfig().openDecorated);
+        return super.remove();
+    }
+
+    @Override
     public void onWindowResize(int width, int height) {
 
     }
@@ -33,7 +40,7 @@ public class DecoratedToggleAddon extends WindowAddon implements WindowAttribute
 
     @Override
     public void onWindowInitialized(double width, double height) {
-        
+
     }
 
     @Override
