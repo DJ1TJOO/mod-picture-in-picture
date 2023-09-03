@@ -1,6 +1,7 @@
 plugins {
     id 'idea'
     id 'java'
+    id 'java-library'
     id 'maven-publish'
     id 'org.spongepowered.gradle.vanilla'
 }
@@ -22,6 +23,7 @@ configurations {
 dependencies {
     compileOnly "org.spongepowered:mixin:0.8.5"
     implementation "com.google.code.findbugs:jsr305:3.0.2"
+    api("me.shedaniel.cloth:cloth-config:${cloth_config_version}")
 }
 
 publishing {

@@ -1,4 +1,5 @@
 plugins {
+    id 'java-library'
     id 'idea'
     id 'maven-publish'
     id 'net.minecraftforge.gradle'
@@ -88,6 +89,7 @@ dependencies {
     compileOnly project(":common")
     testCompileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
+    api(fg.deobf("me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}"))
 }
 
 tasks.withType(JavaCompile).configureEach {

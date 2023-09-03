@@ -17,7 +17,7 @@
     "environment": "*",
     "entrypoints": {
         "main": [
-          "nl.thomasbrants.pictureinpicture.ExampleMod"
+          "nl.thomasbrants.pictureinpicture.FabricBase"
         ]
     },
     "mixins": [

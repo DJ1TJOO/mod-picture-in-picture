@@ -6,19 +6,17 @@ import net.fabricmc.loader.api.FabricLoader;
 public class FabricPlatformHelper implements IPlatformHelper {
 
     @Override
-    public String getPlatformName() {
-        return "Fabric";
+    public Loader getPlatformName() {
+        return Loader.FABRIC;
     }
 
     @Override
     public boolean isModLoaded(String modId) {
-
         return FabricLoader.getInstance().isModLoaded(modId);
     }
 
     @Override
     public boolean isDevelopmentEnvironment() {
-
         return FabricLoader.getInstance().isDevelopmentEnvironment();
     }
 }
